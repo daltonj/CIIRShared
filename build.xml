@@ -1,0 +1,48 @@
+<!-- This is mostly lifted from the build.xml for Galago -->
+<project name="CIIR Library" default="dist" basedir=".">
+  <description>
+      Build file for CIIR Code Reuse Library.
+  </description>
+  <!-- set global properties for this build -->
+  <property name="src" location="src"/>
+  <property name="build" location="build"/>
+  <property name="dist"  location="dist"/>
+
+  <path id="projectClassPath">
+    <fileset dir="lib" includes="*.jar"/>
+    <pathelement location="${java.class.path}"/>
+  </path>
+
+  <target name="init">
+    <!-- Create the time stamp -->
+    <tstamp/>
+    <!-- Create the build directory structure used by compile -->
+    <mkdir dir="${build}"/>
+  </target>
+
+  <target name="compile" depends="init"
+        description="compile the source " >
+    <!-- Compile the java code from ${src} into ${build} -->
+    <javac srcdir="${src}" destdir="${build}" target="1.5" source="1.5" debug="true">
+      <classpath refid="projectClassPath"/>
+    </javac>
+  </target>
+
+  <target name="dist" depends="compile"
+        description="generate the distribution" >
+    <!-- Create the distribution directory -->
+    <mkdir dir="${dist}/lib"/>
+    <!-- Put everything in ${build} into the ciirlib.jar file -->
+    <jar jarfile="${dist}/ciirlib.jar" basedir="${build}"/>
+    <copy todir="${dist}/lib">
+      <fileset dir="lib" includes="*"/>
+    </copy>
+  </target>
+
+  <target name="clean"
+        description="clean up" >
+    <!-- Delete the ${build} and ${dist} directory trees -->
+    <delete dir="${build}"/>
+    <delete dir="${dist}"/>
+  </target>
+</project>
