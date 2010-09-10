@@ -1,21 +1,18 @@
 package edu.umass.ciir.trec.parsers;
 
-import edu.umass.ciir.trec.types.TRECTopic;
-import edu.umass.ciir.trec.types.TRECJudgment;
-
-import java.io.File;
-import java.io.IOException;
-import java.io.FileNotFoundException;
 import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
-
-import java.util.Iterator;
-import java.util.Stack;
+import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import edu.umass.ciir.trec.types.TRECJudgment;
+import edu.umass.ciir.trec.types.TRECTopic;
 
 public class TRECBlog08Parser {
 
@@ -90,8 +87,9 @@ public class TRECBlog08Parser {
 		private boolean attempted;
 		private boolean cached;
 
-		public TRECTopicIterator(File source) {
+		public TRECTopicIterator(File s) {
 			attempted = cached = false;
+			source = s;
 			try {
 				StringBuilder builder = new StringBuilder();	    
 				FileReader reader = new FileReader(source);
@@ -139,8 +137,9 @@ public class TRECBlog08Parser {
 		private BufferedReader br;
 
 		public TRECJudgmentIterator(File s) {
+			source = s;
 			try {
-				br = new BufferedReader(new FileReader(s));
+				br = new BufferedReader(new FileReader(source));
 			} catch (FileNotFoundException fnfe) {
 				br = null;
 			}	    
