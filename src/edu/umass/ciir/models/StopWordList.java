@@ -14,7 +14,7 @@ public class StopWordList {
 		"its", "may", "no", "not", "of", "on", "or", "s", "she", "such", "should",
 		"t", "that", "the", "this", "their", "then", "there", "these",
 		"they", "this", "to", "was", "were", "what", "when", "where", "who", "will", "with",
-		"you"
+		"you", "http", "www", "org", "com", "edu", "resource", "gov"
 		}; 
 	
 	private static Set<String> m_stopSet = null; 

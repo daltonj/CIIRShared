@@ -47,25 +47,44 @@ public class DjvuTextExtractor extends DefaultHandler {
 	    m_parser = new SAXParser();
 	}
 	
-	public String extractText(InputStream is) 
+	public String extractTextCompressed(InputStream is) 
 	throws Exception {
-		is = new CBZip2InputStream(is);
 		// skip the first two bytes... because BZ2 compression is buggy.
 		// see http://www.kohsuke.org/bzip2/
 		is.read();
 		is.read();
-		return extractTextUncompressed(is);
+		is = new CBZip2InputStream(is);
+		parse(is);
+		m_content.setLength(0);
+		for (String page : m_pages) {
+			m_content.append(page + "\n");
+		}
+		return m_content.toString();
 	}
 	
-	public String extractTextUncompressed(InputStream inputStream) 
+	public void parseCompressedBook(InputStream is) 
 	throws Exception {
+		// skip the first two bytes... because BZ2 compression is buggy.
+		// see http://www.kohsuke.org/bzip2/
+		is.read();
+		is.read();
+		is = new CBZip2InputStream(is);
 		
-		m_content.setLength(0);
+		parse(is);
+	}
+	
+	public void extractPages(InputStream is) 
+	throws Exception {
+		parse(is);
+	}
+	
+	public void parse(InputStream inputStream) 
+	throws Exception {
+		m_pages.clear();
 		InputStream inStream = new BufferedInputStream(inputStream);
 		try {
 			m_parser.setContentHandler(this);
 			m_parser.parse(new InputSource(inStream));
-			m_content.append(m_prevTerm + " ");
 		} finally {
 			try {
 				inStream.close();
@@ -73,11 +92,6 @@ public class DjvuTextExtractor extends DefaultHandler {
 				
 			}
 		}
-		m_content.setLength(0);
-		for (String page : m_pages) {
-			m_content.append(page + "\n");
-		}
-		return m_content.toString();
 	}
 
 	public ArrayList<String> getContentByPage() {
@@ -155,12 +169,11 @@ public class DjvuTextExtractor extends DefaultHandler {
 	public static void main(String[] args) 
 	throws Exception {
 		DjvuTextExtractor extractor = new DjvuTextExtractor();
-		File file = new File("./data/dups/ageshakespeare01swingoog_djvu.xml.bz2");
+		File file = new File("/usr/aubury/scratch1/jdalton/code/synonyms/data/djvu/officialarmyregi19692unit_djvu.xml.bz2");
 		FileInputStream is = new FileInputStream(file);
-		String text = extractor.extractText(is);
+		extractor.parseCompressedBook(is);
 		is.close();
-		PrintWriter pw = new PrintWriter("./data/dups/ageshakespeare01swingoog_djvu.text");
-		pw.println(text);
+		PrintWriter pw = new PrintWriter("/usr/aubury/scratch1/jdalton/code/synonyms/data/djvu/officialarmyregi19692unit_djvu.text");
 		pw.flush();
 		pw.close();
 		ArrayList<String> pages = extractor.getContentByPage();

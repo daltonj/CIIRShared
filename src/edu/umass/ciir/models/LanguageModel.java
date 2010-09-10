@@ -160,8 +160,8 @@ public class LanguageModel implements Cloneable {
     	for (String term : terms) {
     		//System.out.println(term);
     		
-    		// skip terms less than three characters long
-    		if (term.length() < 2) {
+    		// skip empty terms
+    		if (term.length() < 1) {
     			continue;
     		}
     		
