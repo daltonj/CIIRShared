@@ -1,6 +1,5 @@
 package edu.umass.ciir;
 
-import java.io.BufferedReader;
 import java.io.Reader;
 
 public class StringRecordReader extends FileRecordReader<String> {
