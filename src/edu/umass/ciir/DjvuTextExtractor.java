@@ -6,9 +6,6 @@ import java.io.FileInputStream;
 import java.io.InputStream;
 import java.io.PrintWriter;
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Set;
 
 import org.apache.tools.bzip2.CBZip2InputStream;
 import org.xml.sax.Attributes;
