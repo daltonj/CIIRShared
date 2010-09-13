@@ -11,7 +11,9 @@ import org.apache.tools.bzip2.CBZip2InputStream;
 import org.xml.sax.Attributes;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
+import org.xml.sax.XMLReader;
 import org.xml.sax.helpers.DefaultHandler;
+import org.xml.sax.helpers.XMLReaderFactory;
 
 import com.sun.org.apache.xerces.internal.parsers.SAXParser;
 
@@ -23,14 +25,15 @@ import com.sun.org.apache.xerces.internal.parsers.SAXParser;
  */
 public class DjvuTextExtractor extends DefaultHandler {
 
+    protected static final String DEFAULT_PARSER_NAME = "org.apache.xerces.parsers.SAXParser";
 	
-	private SAXParser m_parser;
+	private XMLReader m_parser;
 
 	String m_prevTerm = "";
 	// holds a word
-	StringBuilder m_tmp = new StringBuilder();
+	StringBuilder m_wordBuff = new StringBuilder();
 	// holds a page
-	StringBuilder m_content = new StringBuilder();
+	StringBuilder m_contentBuff = new StringBuilder();
 	
 	// holds the previous page number.
 	Integer m_lastPageNum = null;
@@ -40,8 +43,9 @@ public class DjvuTextExtractor extends DefaultHandler {
 
 	private boolean m_inWord = false;
 	
-	public DjvuTextExtractor()  {
-	    m_parser = new SAXParser();
+	public DjvuTextExtractor()  
+	throws Exception {
+	    m_parser = XMLReaderFactory.createXMLReader(DEFAULT_PARSER_NAME);
 	}
 	
 	public String extractTextCompressed(InputStream is) 
@@ -52,11 +56,11 @@ public class DjvuTextExtractor extends DefaultHandler {
 		is.read();
 		is = new CBZip2InputStream(is);
 		parse(is);
-		m_content.setLength(0);
+		m_contentBuff.setLength(0);
 		for (String page : m_pages) {
-			m_content.append(page + "\n");
+			m_contentBuff.append(page + "\n");
 		}
-		return m_content.toString();
+		return m_contentBuff.toString();
 	}
 	
 	public void parseCompressedBook(InputStream is) 
@@ -99,7 +103,7 @@ public class DjvuTextExtractor extends DefaultHandler {
 	public void startElement(java.lang.String uri, java.lang.String localName, java.lang.String qName, Attributes attributes) 
 	throws SAXException {
 		if (localName.equals("WORD")) {
-			m_tmp.setLength(0);
+			m_wordBuff.setLength(0);
 			m_inWord  = true;
 		}
 		
@@ -111,8 +115,8 @@ public class DjvuTextExtractor extends DefaultHandler {
 				name = name.substring(start+1, end);
 			}
 			if (m_lastPageNum != null) {
-				m_pages.add(m_content.toString());
-				m_content.setLength(0);
+				m_pages.add(m_contentBuff.toString());
+				m_contentBuff.setLength(0);
 			}
 			m_lastPageNum = Integer.parseInt(name);
 		}
@@ -120,10 +124,10 @@ public class DjvuTextExtractor extends DefaultHandler {
 
 	@Override
 	public void endElement(String uri, String localName, String rawName) {
-		if (localName.equals("WORD") && m_tmp.length() > 0) {
+		if (localName.equals("WORD") && m_wordBuff.length() > 0) {
 			
 			// handle escaping of ampersands
-			String curWord = m_tmp.toString();
+			String curWord = m_wordBuff.toString();
 			if (curWord.indexOf('&') >= 0) {
 				curWord = removeEscapes(curWord);
 			}
@@ -138,22 +142,22 @@ public class DjvuTextExtractor extends DefaultHandler {
 					m_prevTerm = m_prevTerm.substring(0, m_prevTerm.length()-1);
 					curWord = m_prevTerm + curWord;
 				} else {
-					m_content.append(m_prevTerm + " ");
+					m_contentBuff.append(m_prevTerm + " ");
 				}
 			} else {
-				m_content.append(m_prevTerm + " ");
+				m_contentBuff.append(m_prevTerm + " ");
 			}
 			
 			m_prevTerm = curWord;
 			
 		} else if (localName.equals("BODY")) {
-			m_pages.add(m_content.toString());
+			m_pages.add(m_contentBuff.toString());
 		}
 	}
 	
 	public void characters(char[] ch, int start, int length) {
 		if (m_inWord) {
-			m_tmp.append(ch, start, length);
+			m_wordBuff.append(ch, start, length);
 		}
 	}
 
@@ -166,11 +170,11 @@ public class DjvuTextExtractor extends DefaultHandler {
 	public static void main(String[] args) 
 	throws Exception {
 		DjvuTextExtractor extractor = new DjvuTextExtractor();
-		File file = new File("/usr/aubury/scratch1/jdalton/code/synonyms/data/djvu/officialarmyregi19692unit_djvu.xml.bz2");
+		File file = new File("/usr/aubury/scratch1/jdalton/code/test/officialarmyregi19692unit_djvu.xml.bz2");
 		FileInputStream is = new FileInputStream(file);
 		extractor.parseCompressedBook(is);
 		is.close();
-		PrintWriter pw = new PrintWriter("/usr/aubury/scratch1/jdalton/code/synonyms/data/djvu/officialarmyregi19692unit_djvu.text");
+		PrintWriter pw = new PrintWriter("/usr/aubury/scratch1/jdalton/code/test/officialarmyregi19692unit_djvu.text");
 		pw.flush();
 		pw.close();
 		ArrayList<String> pages = extractor.getContentByPage();
