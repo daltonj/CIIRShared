@@ -19,8 +19,7 @@ public class StopWordList {
 	
 	private static Set<String> m_stopSet = null; 
 	
-	public static boolean isStopWord(String word) 
-	throws Exception {
+	public static boolean isStopWord(String word) {
 		if (m_stopSet == null) {
 			m_stopSet = makeStopSet(STOP_WORDS, true);
 		}

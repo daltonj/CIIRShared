@@ -9,7 +9,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
-import galago.parse.Document;
+import org.lemurproject.galago.core.parse.Document;
 
 /**
  * Represents a model of words in a collection of documents.
@@ -86,6 +86,7 @@ public class LanguageModel implements Cloneable {
     	m_distinctTermsInLastDoc = new HashSet<String>();
     	m_collectionFrequency = 0;
     	m_phraseWindowSize = windowSize;
+    	m_minNgramLength = windowSize;
     }
 
     public long getCollectionFrequency() {
@@ -109,10 +110,10 @@ public class LanguageModel implements Cloneable {
     		
     		//System.out.println(term);
     		
-//    		// skip terms less than three characters long
-//    		if (term.length() < 3) {
-//    			continue;
-//    		}
+    		// skip terms less than three characters long
+    		if (term.length() < 3) {
+    			continue;
+    		}
     		
     		if (filterStopWords && StopWordList.isStopWord(term)) {
     			continue;
@@ -160,8 +161,8 @@ public class LanguageModel implements Cloneable {
     	for (String term : terms) {
     		//System.out.println(term);
     		
-    		// skip empty terms
-    		if (term.length() < 1) {
+    		// skip terms less than three characters long
+    		if (term.length() < 2) {
     			continue;
     		}
     		
@@ -236,23 +237,22 @@ public class LanguageModel implements Cloneable {
     	m_phraseWindow.add(term);
     	if (m_minNgramLength == 1) {
     		addEntry(term, 1);
+    	} else {
+    		StringBuilder sb = new StringBuilder();
+    		for (int i=0; i < m_phraseWindow.size(); i++) {
+    			sb.append(m_phraseWindow.get(i));
+    			sb.append(" ");
+    			if (i > 0 && m_phraseWindow.size() == m_phraseWindowSize) {
+    				// generate phrases.
+    				String phrase = sb.toString().trim();
+    				int termLength = i+1;
+    				if (termLength >= m_minNgramLength) {
+    					addEntry(phrase, termLength);
+    				}
+    				// System.out.println("phrase: " + phrase);
+    			}
+    		}
     	}
-    	//System.out.println("New term: " + term);
-    	StringBuilder sb = new StringBuilder();
-    	for (int i=0; i < m_phraseWindow.size(); i++) {
-    		 sb.append(m_phraseWindow.get(i));
-    		 sb.append(" ");
-    		 if (i > 0 && m_phraseWindow.size() == m_phraseWindowSize) {
-    			 // generate phrases.
-    			 String phrase = sb.toString().trim();
-    			 int termLength = i+1;
-    			 if (termLength >= m_minNgramLength) {
-    				 addEntry(phrase, termLength);
-    			 }
-    			// System.out.println("phrase: " + phrase);
-    		 }
-    	}
-    	
     }
     
     /**
@@ -316,7 +316,9 @@ public class LanguageModel implements Cloneable {
 //    			}
     		}
     	}
-    	m_collectionFrequency++;
+    	if (numTokens == 1) {
+    		m_collectionFrequency++;
+    	}
     	m_distinctTermsInLastDoc.add(term);
     }
     
@@ -330,17 +332,21 @@ public class LanguageModel implements Cloneable {
      * @param term
      * @param numTokens the number of words in the term
      */
-    private void addEntry(TermEntry te) {
+    public void addEntry(TermEntry te) {
     	String term = te.getTerm();
     	TermEntry entry = m_entries.get(term);
     	if (entry == null) {
     		entry = new TermEntry(term, te.getFrequency(), te.getNumTokens(), te.getDocumentFrequency());
+    		entry.setProbability(te.getProbability());
     		m_entries.put(term, entry);
     	} else {
     		entry.addTermFrequency(te.getFrequency());
     		entry.addDocFrequency(te.getDocumentFrequency());
     	}
-    	m_collectionFrequency += te.getFrequency();
+    	// only count unigrams
+    	if (te.getNumTokens() == 1) {
+    		m_collectionFrequency += te.getFrequency();
+    	}
     	// we do not need to update the distinct terms found since this should only be used for merging language
     	// models that have already been distinctified.
     }
@@ -540,8 +546,8 @@ public class LanguageModel implements Cloneable {
      * 
      * @return
      */
-    public Collection<TermEntry> getVocabulary() {
-    	return (m_entries.values());
+    public Collection<String> getVocabulary() {
+    	return (m_entries.keySet());
     }
     
     public int getMinNgramLength() {

@@ -1,9 +1,9 @@
 package edu.umass.ciir.crawling;
 
-import edu.umass.ciir.models.LanguageModel;
+import org.lemurproject.galago.core.parse.Document;
+import org.lemurproject.galago.core.parse.TagTokenizer;
 
-import galago.parse.Document;
-import galago.parse.TagTokenizer;
+import edu.umass.ciir.models.LanguageModel;
 
 public class WebLanguageModelBuilder {
 

@@ -15,8 +15,6 @@ import org.xml.sax.XMLReader;
 import org.xml.sax.helpers.DefaultHandler;
 import org.xml.sax.helpers.XMLReaderFactory;
 
-import com.sun.org.apache.xerces.internal.parsers.SAXParser;
-
 /**
  * Reads Compressed DJVU view and outputs the text.
  * 
@@ -39,7 +37,7 @@ public class DjvuTextExtractor extends DefaultHandler {
 	Integer m_lastPageNum = null;
 	
 	// a list of all pages parsed so far.
-	ArrayList<String> m_pages = new ArrayList<String>();
+	ArrayList<Page> m_pages = new ArrayList<Page>();
 
 	private boolean m_inWord = false;
 	
@@ -57,8 +55,8 @@ public class DjvuTextExtractor extends DefaultHandler {
 		is = new CBZip2InputStream(is);
 		parse(is);
 		m_contentBuff.setLength(0);
-		for (String page : m_pages) {
-			m_contentBuff.append(page + "\n");
+		for (Page page : m_pages) {
+			m_contentBuff.append(page.getText() + "\n");
 		}
 		return m_contentBuff.toString();
 	}
@@ -95,7 +93,7 @@ public class DjvuTextExtractor extends DefaultHandler {
 		}
 	}
 
-	public ArrayList<String> getContentByPage() {
+	public ArrayList<Page> getContentByPage() {
 		return m_pages;
 	}
 	
@@ -115,7 +113,7 @@ public class DjvuTextExtractor extends DefaultHandler {
 				name = name.substring(start+1, end);
 			}
 			if (m_lastPageNum != null) {
-				m_pages.add(m_contentBuff.toString());
+				m_pages.add(new Page(m_pages.size()+1, m_contentBuff.toString()));
 				m_contentBuff.setLength(0);
 			}
 			m_lastPageNum = Integer.parseInt(name);
@@ -151,7 +149,7 @@ public class DjvuTextExtractor extends DefaultHandler {
 			m_prevTerm = curWord;
 			
 		} else if (localName.equals("BODY")) {
-			m_pages.add(m_contentBuff.toString());
+			m_pages.add(new Page(m_pages.size()+1, m_contentBuff.toString()));
 		}
 	}
 	
@@ -177,7 +175,7 @@ public class DjvuTextExtractor extends DefaultHandler {
 		PrintWriter pw = new PrintWriter("/usr/aubury/scratch1/jdalton/code/test/officialarmyregi19692unit_djvu.text");
 		pw.flush();
 		pw.close();
-		ArrayList<String> pages = extractor.getContentByPage();
+		ArrayList<Page> pages = extractor.getContentByPage();
 		System.out.println(pages.size());
 		
 	}

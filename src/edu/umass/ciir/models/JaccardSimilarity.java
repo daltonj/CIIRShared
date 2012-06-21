@@ -8,11 +8,11 @@ public class JaccardSimilarity implements LanguageModelSimilarity {
 	public SimilarityMeasure calculateSimilarity(LanguageModel lm1,	LanguageModel lm2, boolean useProbabilities) {
 		
 		HashSet<TermEntry> union = new HashSet<TermEntry>();
-		union.addAll(lm1.getVocabulary());
-		union.addAll(lm2.getVocabulary());
+		union.addAll(lm1.getEntries());
+		union.addAll(lm2.getEntries());
 		
 		HashSet<String> intersection = new HashSet<String>();
-		Collection<TermEntry> vocabA = lm1.getVocabulary();
+		Collection<TermEntry> vocabA = lm1.getEntries();
 		for (TermEntry entryA : vocabA) {
 			TermEntry entryB = lm2.getTermEntry(entryA.getTerm());
 			if (entryB != null) {

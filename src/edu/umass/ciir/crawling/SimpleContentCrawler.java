@@ -37,4 +37,10 @@ public class SimpleContentCrawler {
 		return text.toString();
 	}
 
+	public static void main(String[] args) 
+	throws Exception {
+		SimpleContentCrawler crawler = new SimpleContentCrawler();
+		String content = crawler.fetchUrl("http://www.archive.org/download/HistoryOfTheTheoryOfNumbersI/PTIFF");
+		System.out.println(content);
+	}
 }
