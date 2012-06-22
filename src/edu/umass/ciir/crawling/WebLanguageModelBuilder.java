@@ -1,7 +1,7 @@
 package edu.umass.ciir.crawling;
 
-import org.galagosearch.core.parse.Document;
-import org.galagosearch.core.parse.TagTokenizer;
+import org.lemurproject.galago.core.parse.Document;
+import org.lemurproject.galago.core.parse.TagTokenizer;
 
 import edu.umass.ciir.models.LanguageModel;
 

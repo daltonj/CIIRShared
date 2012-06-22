@@ -1,7 +1,7 @@
 package edu.umass.ciir.models;
 
 import java.io.BufferedReader;
-import java.io.DataInputStream;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.HashSet;
 import java.util.Set;
@@ -14,14 +14,18 @@ public class StopWordList {
 		"its", "may", "no", "not", "of", "on", "or", "s", "she", "such", "should",
 		"t", "that", "the", "this", "their", "then", "there", "these",
 		"they", "this", "to", "was", "were", "what", "when", "where", "who", "will", "with",
-		"you"
+		"you", "http", "www", "org", "com", "edu", "resource", "gov"
 		}; 
 	
 	private static Set<String> m_stopSet = null; 
 	
-	public static boolean isStopWord(String word) 
-	throws Exception {
+	public static boolean isStopWord(String word) {
 		if (m_stopSet == null) {
+		    try {
+		        loadFromResources();
+		    } catch (Exception e) {
+		        System.out.println("failed to load inquery stopword list");
+		    }
 			m_stopSet = makeStopSet(STOP_WORDS, true);
 		}
 		return m_stopSet.contains(word.toLowerCase());
@@ -40,6 +44,10 @@ public class StopWordList {
 		return stopTable;
 	} 
 	
+	private static final void loadFromResources() throws Exception {
+	    System.out.println("Loading inquery stopword list from resources.");
+	    reloadStopWordFromInputStream(StopWordList.class.getResourceAsStream("/stopwords/inquery"), true);
+	}
 	/**
 	 * Reads stop words from a file, one per line.  
 	 * 
@@ -47,7 +55,7 @@ public class StopWordList {
 	 * 
 	 * @param stopwordFile
 	 */
-	public static final void reloadStopWordFromInputStream(DataInputStream inputStream, boolean ignoreCase) 
+	public static final void reloadStopWordFromInputStream(InputStream inputStream, boolean ignoreCase) 
 	throws Exception {
 		HashSet<String> stopTable = new HashSet<String>();
 		BufferedReader br  = new BufferedReader(new InputStreamReader(inputStream));

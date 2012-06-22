@@ -18,9 +18,9 @@ public class Cluster {
 	
 	public double compareToDoc(LanguageModel doc) {
 	
-		KLDivergenceSimilarity klDiv1 = new KLDivergenceSimilarity();
+		KLDivergenceSimilarity klDiv1 = new KLDivergenceSimilarity(null,2500);
 		SimilarityMeasure sm1 = klDiv1.calculateSimilarity(this.getClusterCenter(), doc, true);
-		KLDivergenceSimilarity klDiv2 = new KLDivergenceSimilarity();
+		KLDivergenceSimilarity klDiv2 = new KLDivergenceSimilarity(null, 2500);
 		SimilarityMeasure sm2 = klDiv2.calculateSimilarity(doc, this.getClusterCenter(), true);
 		return Math.abs(sm1.getSimilarity()) + Math.abs(sm2.getSimilarity());
 	}

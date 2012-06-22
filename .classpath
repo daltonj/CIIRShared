@@ -2,7 +2,6 @@
 <classpath>
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
-	<classpathentry kind="lib" path="lib/bzip2.jar" sourcepath="C:/progs/OcaErrorCorrection/lib/bzip2"/>
-	<classpathentry kind="lib" path="C:/Documents and Settings/Jeremy Brody/Desktop/galagosearch-1.04/lib/galagosearch-core-1.04.jar" sourcepath="C:/Documents and Settings/Jeremy Brody/Desktop/galagosearch-1.04/galagosearch-core"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/Galago32"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

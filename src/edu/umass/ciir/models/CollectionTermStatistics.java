@@ -35,7 +35,7 @@ public class CollectionTermStatistics {
 	 * @param lm
 	 */
 	public void addLanguageModel(LanguageModel lm) {
-		Collection<TermEntry> vocabulary = lm.getVocabulary();
+		Collection<TermEntry> vocabulary = lm.getEntries();
 		for (TermEntry termEntry : vocabulary) {
 			String term = termEntry.getTerm();
 			LanguageModelStatEntry languageModelStats = m_index.get(term);
