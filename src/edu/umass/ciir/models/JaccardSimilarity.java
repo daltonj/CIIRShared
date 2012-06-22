@@ -24,5 +24,4 @@ public class JaccardSimilarity implements LanguageModelSimilarity {
 		return new SimilarityMeasure(overlap, "Jaccard Coefficient");
 		
 	}
-
 }

@@ -1,5 +1,5 @@
-package edu.umass.ciir;
 
+package edu.umass.ciir;
 
 import java.io.File;
 import java.io.FileReader;
@@ -11,7 +11,7 @@ public class LanguageModelRecordReader extends FileRecordReader<TermEntry> {
 	private long m_collectionFrequency;
 	
 	public LanguageModelRecordReader(File fileToRead) throws Exception {
-		super(fileToRead, false, null);
+		super(new FileReader(fileToRead), false, null);
 		String first = m_bufReader.readLine();
 		try {
 			m_collectionFrequency = Long.parseLong(first);

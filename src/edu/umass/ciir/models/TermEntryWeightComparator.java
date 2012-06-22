@@ -7,13 +7,17 @@ import java.util.Comparator;
  * We want the entry with the highest score to be seen first.
  */
 public class TermEntryWeightComparator implements Comparator<TermEntry> {
-    
-    public int compare(TermEntry o1, TermEntry o2) {
-	double w1 = o1.getWeight();
-	double w2 = o2.getWeight();
-	
-	if (w1 < w2) return 1;
-	if (w1 > w2) return -1;
-	return 0;
-    }    
+
+	public int compare(TermEntry o1, TermEntry o2) {
+		double w1 = o1.getWeight();
+		double w2 = o2.getWeight();
+
+		if (w1 < w2) {
+			return 1;
+		} else if (w1 > w2) {
+			return -1;
+		} else {
+			return 0;	
+		}
+	}
 }

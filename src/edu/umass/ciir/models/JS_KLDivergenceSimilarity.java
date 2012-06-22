@@ -28,9 +28,8 @@ public class JS_KLDivergenceSimilarity implements LanguageModelSimilarity {
  
     	double p1, p2, p_both;
 
-
-    	Collection<TermEntry> vocab2 = lm2.getEntries();
     	Collection<TermEntry> vocab1 = lm1.getEntries();
+    	
     	double total1 = (double) lm1.getCollectionFrequency();
     	double total2 = (double) lm2.getCollectionFrequency();    	
     	double divergence = 0.0;

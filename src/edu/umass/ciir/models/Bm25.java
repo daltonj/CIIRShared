@@ -9,7 +9,7 @@ public class Bm25 {
 	protected double m_b = DEFAULT_B;
 
 	protected long m_numberOfDocumentsInCollection;
-	protected final double m_avgDocumentLength;
+	protected double m_avgDocumentLength;
 	
 	/**
 	 * Constructor
@@ -32,5 +32,23 @@ public class Bm25 {
 	protected double cfw(long documentFrequency) {
 		return Math.log((m_numberOfDocumentsInCollection - documentFrequency + 0.5d) / (documentFrequency + 0.5d)) / Math.log(2.0d); 
 	}
+
+	public long getNumberOfDocumentsInCollection() {
+		return m_numberOfDocumentsInCollection;
+	}
+
+	public void setNumberOfDocumentsInCollection(long numberOfDocumentsInCollection) {
+		m_numberOfDocumentsInCollection = numberOfDocumentsInCollection;
+	}
+
+	public double getAvgDocumentLength() {
+		return m_avgDocumentLength;
+	}
+
+	public void setAvgDocumentLength(double avgDocumentLength) {
+		m_avgDocumentLength = avgDocumentLength;
+	}
+	
+	
 	
 }

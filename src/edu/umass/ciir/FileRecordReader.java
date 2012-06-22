@@ -1,8 +1,8 @@
 package edu.umass.ciir;
 
 import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
+import java.io.IOException;
+import java.io.Reader;
 
 /**
  * Allows a file of records, one per line, to be read entry by entry via
@@ -50,10 +50,9 @@ public abstract class FileRecordReader<T> {
 	 * 
 	 * @param fileToRead
 	 */
-	public FileRecordReader(File fileToRead, boolean catchParseExceptions, PrefixFilter prefixFilter) throws Exception {
+	public FileRecordReader(Reader reader, boolean catchParseExceptions, PrefixFilter prefixFilter) throws Exception {
 		m_prefixFilter = prefixFilter;
-		FileReader fileReader = new FileReader(fileToRead);
-		m_bufReader = new BufferedReader(fileReader);
+		m_bufReader = new BufferedReader(reader);
 		m_catchParseExceptions = catchParseExceptions;
 	}
 	
@@ -85,6 +84,10 @@ public abstract class FileRecordReader<T> {
 				// skip comments or blank lines when appropriate
 			} else {
 				try {
+//					if (input.length() > 500) {
+//						System.out.println("Error processing long line: " + input.length());
+//						continue;
+//					}
 					obj =  parseLine(input);
 				} catch (Exception e) {
 					System.out.println("Error parsing input:" + input);
@@ -102,7 +105,7 @@ public abstract class FileRecordReader<T> {
 	/**
 	 * This MUST be closed.
 	 */
-	public void close() throws Exception {
+	public void close() throws IOException {
 		m_bufReader.close();
 	}
 

@@ -9,7 +9,6 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
-
 import org.lemurproject.galago.core.parse.Document;
 
 /**
@@ -133,6 +132,23 @@ public class LanguageModel implements Cloneable {
     /**
      * Add a document to the language model.
      * 
+     * @param LanguageModel to add
+     */
+    public void addDocument(LanguageModel lm) 
+    throws Exception {
+    	
+    	// Add the terms from LM
+    	Collection<TermEntry> lm1Entries = lm.m_entries.values();
+    	for (TermEntry te : lm1Entries) {
+    		addEntry(te);
+    		// NOTE: We assume that the LM has already been distinctified.
+    		te.incrementDocFrequency();
+    	}
+    } 
+    
+    /**
+     * Add a document to the language model.
+     * 
      * @param Document to add
      * @param filterStopWords, if true then stop words are not used in the model
      */
@@ -219,24 +235,23 @@ public class LanguageModel implements Cloneable {
     	}
     	m_phraseWindow.add(term);
     	if (m_minNgramLength == 1) {
-    		addEntry(term, 1);
-    	} 
+            addEntry(term, 1);
+        } 
 
-    	StringBuilder sb = new StringBuilder();
-    	for (int i=0; i < m_phraseWindow.size(); i++) {
-    	    sb.append(m_phraseWindow.get(i));
-    	    sb.append(" ");
-    	    if (i > 0 && m_phraseWindow.size() == m_phraseWindowSize) {
-    	        // generate phrases.
-    	        String phrase = sb.toString().trim();
-    	        int termLength = i+1;
-    	        if (termLength >= m_minNgramLength) {
-    	            addEntry(phrase, termLength);
-    	        }
-    	        // System.out.println("phrase: " + phrase);
-    	    }
-    	}
-
+        StringBuilder sb = new StringBuilder();
+        for (int i=0; i < m_phraseWindow.size(); i++) {
+            sb.append(m_phraseWindow.get(i));
+            sb.append(" ");
+            if (i > 0 && m_phraseWindow.size() == m_phraseWindowSize) {
+                // generate phrases.
+                String phrase = sb.toString().trim();
+                int termLength = i+1;
+                if (termLength >= m_minNgramLength) {
+                    addEntry(phrase, termLength);
+                }
+                // System.out.println("phrase: " + phrase);
+            }
+        }
     }
     
     /**
