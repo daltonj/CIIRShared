@@ -44,7 +44,7 @@ public class GalagoIndexSearcher implements SearcherI {
 		queryParams.set("count", ""+query.getNumResults());
 
 		ArrayList<Result> results = new ArrayList<Result>();
-    	Node root = StructuredQuery.parse(query.getQuery());
+    	Node root = StructuredQuery.parse(query.getRawQuery());
         Node transformed = m_retrieval.transformQuery(root, queryParams);
 
 		boolean useStemmming = CiirProperties.getPropertyAsBoolean("Searcher.performStemming", true);
@@ -54,7 +54,7 @@ public class GalagoIndexSearcher implements SearcherI {
 		
 		boolean debug = false;
 		if (debug) {
-			System.err.println("Input:" + query.getQuery());
+			System.err.println("Input:" + query.getRawQuery());
 			System.err.println("Parsed:" + root.toString());
 			System.err.println("Transformed:" + transformed.toString());
 		}
@@ -76,7 +76,7 @@ public class GalagoIndexSearcher implements SearcherI {
 		}
 
 		if (debug) {
-			System.out.println("Running query: " + query.getQuery() + " num hits:" + numHits + " num results:" + results.size());
+			System.out.println("Running query: " + query.getRawQuery() + " num hits:" + numHits + " num results:" + results.size());
 		}
 		
 		if (query.fetchDocs()) {

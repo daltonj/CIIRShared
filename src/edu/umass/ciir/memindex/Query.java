@@ -2,24 +2,25 @@ package edu.umass.ciir.memindex;
 
 public class Query {
 
-	String m_query;
+	private final String m_rawQuery;
 	
-	int m_queryNum;
+	private String m_processedQuery;
 	
-	/**
-	 * -1 indicates all hits
-	 */
+	private final String m_queryNum;
+	
 	int m_numRequestedResults;
 	
 	boolean m_fetchDocs = false;
 	
-	public Query(String query, int numResults) {
-		m_query = query;
+	
+	public Query(String queryId, String rawQuery, int numResults) {
+		m_rawQuery = rawQuery;
+		m_queryNum = queryId;
 		m_numRequestedResults = numResults;
 	}
 
-	public String getQuery() {
-		return m_query;
+	public String getRawQuery() {
+		return m_rawQuery;
 	}
 
 	public int getNumResults() {
@@ -30,12 +31,12 @@ public class Query {
 		return m_fetchDocs;
 	}
 	
-	public int getQueryNum() {
+	public String getQueryNum() {
 		return m_queryNum;
 	}
 	
 	public String toString() {
-		return m_query;
+		return m_rawQuery;
 	}
 	
 }
