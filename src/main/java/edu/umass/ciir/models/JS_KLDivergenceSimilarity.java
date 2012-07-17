@@ -28,7 +28,14 @@ public class JS_KLDivergenceSimilarity implements LanguageModelSimilarity {
     public SimilarityMeasure calculateSimilarity(LanguageModel lm1, LanguageModel lm2, boolean useProbabilities) {
 
     	double divergence1 = Math.abs(calculateCorePart(lm1, lm2, useProbabilities));
+    	if (divergence1 == Double.POSITIVE_INFINITY) {
+    	    divergence1 = Double.MAX_VALUE;
+    	}
+    	
     	double divergence2 = Math.abs(calculateCorePart(lm2, lm1, useProbabilities));
+    	if (divergence2 == Double.POSITIVE_INFINITY) {
+            divergence2 = Double.MAX_VALUE;
+        }
     	
     	SimilarityMeasure sm = new SimilarityMeasure((0.5 * divergence1) + (0.5 * divergence2), "No information found");
     	return sm;
@@ -78,7 +85,9 @@ public class JS_KLDivergenceSimilarity implements LanguageModelSimilarity {
                 / (smoothingAlpha + total2);
             }
             double logPart = Math.log(p1 / p2);
-            divergence += p1 * logPart;
+            double contrib = p1 * logPart;
+            divergence += contrib;
+            System.out.println(te1.getTerm() + " contrib: " + contrib );
         }
     	return divergence;   
     }
