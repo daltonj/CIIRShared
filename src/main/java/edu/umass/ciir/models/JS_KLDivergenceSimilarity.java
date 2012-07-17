@@ -3,9 +3,19 @@ package edu.umass.ciir.models;
 import java.util.Collection;
 import java.util.Iterator;
 
+import edu.umass.ciir.models.LanguageModel;
+import edu.umass.ciir.models.SimilarityMeasure;
+import edu.umass.ciir.models.TermEntry;
+
 public class JS_KLDivergenceSimilarity implements LanguageModelSimilarity {
     
-    public JS_KLDivergenceSimilarity() {
+    
+    private double smoothingAlpha;
+    private final LanguageModel background;
+    
+    public JS_KLDivergenceSimilarity(LanguageModel background, double smoothingParam) {
+        this.background = background;
+        smoothingAlpha = smoothingParam;
     }
 
     /**
@@ -26,39 +36,50 @@ public class JS_KLDivergenceSimilarity implements LanguageModelSimilarity {
     
     public double calculateCorePart(LanguageModel lm1, LanguageModel lm2, boolean useProbabilities) {
  
-    	double p1, p2, p_both;
+        double p1, p2;
 
-    	Collection<TermEntry> vocab1 = lm1.getEntries();
-    	
-    	double total1 = (double) lm1.getCollectionFrequency();
-    	double total2 = (double) lm2.getCollectionFrequency();    	
-    	double divergence = 0.0;
+        Collection<TermEntry> vocab = lm1.getEntries();
+        double total1 = (double) lm1.getCollectionFrequency();
+        
+        if (lm2.getCollectionFrequency() == 0) {
+            return Double.MAX_VALUE;
+        }
+        
+        double total2 = (double) lm2.getCollectionFrequency();
+        double divergence = 0.0;
 
-    	Iterator<TermEntry> vIter1 = vocab1.iterator();
-    	while (vIter1.hasNext()) {
-    		TermEntry te1 = vIter1.next();
-    		TermEntry te2 = lm2.getTermEntry(te1.getTerm());
-    		if(useProbabilities) {
-    			p1 = te1.getProbability();
-		}    		
-    		else {
-    			p1 = ((double) te1.getFrequency()) / total1;
-    		}
-    		if (te2 != null) {
-    			if(useProbabilities) {
-    				p_both = (p1 + te2.getProbability()) / 2;
-    			}
-    			else {
-    				p2 = (double) te2.getFrequency() / total2;
-    				p_both = (p1 + p2) / 2;
-    			}
-    		} else {
-    			p_both = (p1 + (1.0 / total2)) / 2;
-    		}
-    		double logPart = Math.log(p1 / p_both);
-    		divergence += p1 * logPart;
-    	}
-    	
+        Iterator<TermEntry> vIter = vocab.iterator();
+        while (vIter.hasNext()) {
+            TermEntry te1 = vIter.next();
+            TermEntry te2 = lm2.getTermEntry(te1.getTerm());
+            TermEntry bgTerm =  background.getTermEntry(te1.getTerm());
+
+            if (bgTerm == null) {
+                System.out.println("Unable to get background model for term: " + te1.getTerm());
+            }
+            if (useProbabilities) {
+                p1 = te1.getProbability();
+            } else {
+                p1 = ((double) te1.getFrequency() / total1);
+            }
+            if (te2 != null) {
+                if (useProbabilities) {
+                    p2 = te2.getProbability();
+                    if (p2 < 0.0000001) {
+                        p2 = smoothingAlpha / total2;
+                    }
+                } else {
+                    p2 = ((double) te2.getFrequency() 
+                            + (smoothingAlpha * bgTerm.getProbability())) 
+                            / (smoothingAlpha + total2);
+                }
+            } else {
+                p2 = (smoothingAlpha * bgTerm.getProbability()) 
+                / (smoothingAlpha + total2);
+            }
+            double logPart = Math.log(p1 / p2);
+            divergence += p1 * logPart;
+        }
     	return divergence;   
     }
 }
