@@ -91,6 +91,10 @@ public class LanguageModel implements Cloneable {
     public long getCollectionFrequency() {
     	return m_collectionFrequency;
     }
+    
+    public void setCollectionFrequency(long collectionFrequency) {
+        m_collectionFrequency = collectionFrequency;
+    }
 
     /**
      * Add a document to the language model.

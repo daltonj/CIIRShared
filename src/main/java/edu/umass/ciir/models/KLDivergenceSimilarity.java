@@ -5,7 +5,8 @@ import java.util.Iterator;
 
 public class KLDivergenceSimilarity implements LanguageModelSimilarity {
     
-	private double smoothingAlpha;
+    private double absoluteSmoothingCnt = 0.1;
+	private double dirichletSmoothingParam;
 	private final LanguageModel background;
 
 	/**
@@ -14,7 +15,7 @@ public class KLDivergenceSimilarity implements LanguageModelSimilarity {
     
     public KLDivergenceSimilarity(LanguageModel background, double smoothingParam) {
     	this.background = background;
-		smoothingAlpha = smoothingParam;
+    	dirichletSmoothingParam = smoothingParam;
     }
 
     
@@ -42,32 +43,48 @@ public class KLDivergenceSimilarity implements LanguageModelSimilarity {
     		TermEntry te1 = vIter.next();
     		TermEntry te2 = lm2.getTermEntry(te1.getTerm());
 			TermEntry bgTerm =  background.getTermEntry(te1.getTerm());
-
+			
+			
 			if (bgTerm == null) {
 				System.out.println("Unable to get background model for term: " + te1.getTerm());
-			}
+				bgTerm = new TermEntry(te1.getTerm(), 1, 1);
+			} 
+			
+			if (bgTerm.getProbability() <  (1 / background.getCollectionFrequency())) {
+                bgTerm.setProbability(0.5 / background.getCollectionFrequency());
+            }
+			
     		if (useProbabilities) {
     			p1 = te1.getProbability();
     		} else {
-    			p1 = ((double) te1.getFrequency() / total1);
+    			p1 = ((double) te1.getFrequency() 
+                        + (dirichletSmoothingParam * bgTerm.getProbability())) 
+                        / (dirichletSmoothingParam + total1);
     		}
     		if (te2 != null) {
     			if (useProbabilities) {
     				p2 = te2.getProbability();
+    				// avoid 0 prob by using a small value
     				if (p2 < 0.0000001) {
-    					p2 = smoothingAlpha / total2;
+    					p2 = absoluteSmoothingCnt / total2;
     				}
     			} else {
     				p2 = ((double) te2.getFrequency() 
-    						+ (smoothingAlpha * bgTerm.getProbability())) 
-    						/ (smoothingAlpha + total2);
+    						+ (dirichletSmoothingParam * bgTerm.getProbability())) 
+    						/ (dirichletSmoothingParam + total2);
     			}
     		} else {
-    			p2 = (smoothingAlpha * bgTerm.getProbability()) 
-				/ (smoothingAlpha + total2);
+    		    if (useProbabilities) {
+    		        p2 = absoluteSmoothingCnt / total2;
+    		    } else {
+    		        p2 = (dirichletSmoothingParam * bgTerm.getProbability()) 
+    		                / (dirichletSmoothingParam + total2);
+    		    }
     		}
     		double logPart = Math.log(p1 / p2);
-    		divergence += p1 * logPart;
+    		double contrib = p1 * logPart;
+    		//System.out.println(te1.getTerm() + " " + contrib);
+    		divergence += contrib;
     	}
 
     	SimilarityMeasure sm = new SimilarityMeasure(divergence, "No information found");
