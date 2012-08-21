@@ -50,15 +50,17 @@ public class KLDivergenceSimilarity implements LanguageModelSimilarity {
 				bgTerm = new TermEntry(te1.getTerm(), 1, 1);
 			} 
 			
-			if (bgTerm.getProbability() <  (1 / background.getCollectionFrequency())) {
-                bgTerm.setProbability(0.5 / background.getCollectionFrequency());
+			double backgroundProb = bgTerm.getProbability();
+			double minBackground = (1.0 / background.getCollectionFrequency());
+			if ( backgroundProb <  minBackground) {
+			    backgroundProb = (0.5 / background.getCollectionFrequency());
             }
 			
     		if (useProbabilities) {
     			p1 = te1.getProbability();
     		} else {
     			p1 = ((double) te1.getFrequency() 
-                        + (dirichletSmoothingParam * bgTerm.getProbability())) 
+                        + (dirichletSmoothingParam * backgroundProb)) 
                         / (dirichletSmoothingParam + total1);
     		}
     		if (te2 != null) {
@@ -70,14 +72,14 @@ public class KLDivergenceSimilarity implements LanguageModelSimilarity {
     				}
     			} else {
     				p2 = ((double) te2.getFrequency() 
-    						+ (dirichletSmoothingParam * bgTerm.getProbability())) 
+    						+ (dirichletSmoothingParam * backgroundProb)) 
     						/ (dirichletSmoothingParam + total2);
     			}
     		} else {
     		    if (useProbabilities) {
     		        p2 = absoluteSmoothingCnt / total2;
     		    } else {
-    		        p2 = (dirichletSmoothingParam * bgTerm.getProbability()) 
+    		        p2 = (dirichletSmoothingParam * backgroundProb) 
     		                / (dirichletSmoothingParam + total2);
     		    }
     		}
