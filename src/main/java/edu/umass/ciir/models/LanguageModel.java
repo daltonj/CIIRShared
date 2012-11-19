@@ -124,8 +124,6 @@ public class LanguageModel implements Cloneable {
     		generateTerms(term);
     		
     	}
-    	finishGeneratingTerms();
-
     	// update document frequencies
     	for (String term : m_distinctTermsInLastDoc) {
     		TermEntry t = getTermEntry(term);
@@ -175,8 +173,6 @@ public class LanguageModel implements Cloneable {
     		generateTerms(term);
     		
     	}
-    	finishGeneratingTerms();
-
     	// update document frequencies
     	for (String term : m_distinctTermsInLastDoc) {
     		TermEntry t = getTermEntry(term);
@@ -209,8 +205,6 @@ public class LanguageModel implements Cloneable {
     		generateTerms(term);
     		
     	}
-    	finishGeneratingTerms();
-
     	// update document frequencies
     	for (String term : m_distinctTermsInLastDoc) {
     		TermEntry t = getTermEntry(term);
@@ -242,43 +236,17 @@ public class LanguageModel implements Cloneable {
             addEntry(term, 1);
         } 
 
-        StringBuilder sb = new StringBuilder();
-        for (int i=0; i < m_phraseWindow.size(); i++) {
-            sb.append(m_phraseWindow.get(i));
-            sb.append(" ");
-            if (i > 0 && m_phraseWindow.size() == m_phraseWindowSize) {
-                // generate phrases.
-                String phrase = sb.toString().trim();
-                int termLength = i+1;
-                if (termLength >= m_minNgramLength) {
-                    addEntry(phrase, termLength);
-                }
-                // System.out.println("phrase: " + phrase);
+        for (int i=m_phraseWindow.size(); i > m_minNgramLength; i--) { 
+            int startIdx = m_phraseWindow.size() - i;
+            StringBuilder sb = new StringBuilder();
+            for (int j = startIdx; j < m_phraseWindow.size(); j++) {
+                sb.append(m_phraseWindow.get(j));
+                sb.append(" ");
             }
+            String phrase = sb.toString().trim();
+            int termLength = i;
+            addEntry(phrase, termLength);
         }
-    }
-    
-    /**
-     * Flush n-grams still in the pipeline.
-     */
-    private void finishGeneratingTerms() {
-    	while (m_phraseWindow.size() > 1) {
-    		m_phraseWindow.remove(0);
-    		StringBuilder sb = new StringBuilder();
-    		for (int i=0; i < m_phraseWindow.size(); i++) {
-    			sb.append(m_phraseWindow.get(i));
-    			sb.append(" ");
-    			if (i > 0) {
-    				// generate phrases.
-    				String phrase = sb.toString().trim();
-    				 int termLength = i+1;
-    				 if (termLength >= m_minNgramLength) {
-    					 addEntry(phrase, termLength);
-    				 }
-    			//	System.out.println("phrase: " + phrase);
-    			}
-    		}
-    	}
     }
     
     /**
