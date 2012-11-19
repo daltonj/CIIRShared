@@ -26,10 +26,34 @@ public class StopWordList {
 		    } catch (Exception e) {
 		        System.out.println("failed to load inquery stopword list");
 		    }
-			m_stopSet = makeStopSet(STOP_WORDS, true);
+			//m_stopSet = makeStopSet(STOP_WORDS, true);
 		}
 		return m_stopSet.contains(word.toLowerCase());
-	} 
+	}
+	
+	public static void addWord(String word) {
+	    
+	    if (m_stopSet == null) {
+            try {
+                loadFromResources();
+            } catch (Exception e) {
+                System.out.println("failed to load inquery stopword list");
+            }
+	    }
+            
+	    m_stopSet.add(word);
+	}
+	
+	public static Set<String> getStopWords() {
+	    if (m_stopSet == null) {
+            try {
+                loadFromResources();
+            } catch (Exception e) {
+                System.out.println("failed to load inquery stopword list");
+            }
+	    }
+	    return m_stopSet;
+	}
 	
 	 /**
 	* @param stopWords
