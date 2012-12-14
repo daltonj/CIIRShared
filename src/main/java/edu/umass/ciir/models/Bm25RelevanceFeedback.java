@@ -1,8 +1,9 @@
 package edu.umass.ciir.models;
 
 /**
- * Substitutes a Relevance Weight for the IDF weight.  The relevance weight used here is the RSJ weight
- * @author Jeremy Brody
+ * Substitutes a Relevance Weight for the IDF weight.  The relevance weight used here is the RSJ weight.
+ * 
+ * @author Jeff Dalton
  *
  */
 public class Bm25RelevanceFeedback extends Bm25 {

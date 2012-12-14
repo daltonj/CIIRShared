@@ -46,7 +46,7 @@ public class KLDivergenceSimilarity implements LanguageModelSimilarity {
 			
 			
 			if (bgTerm == null) {
-				System.out.println("Unable to get background model for term: " + te1.getTerm());
+				//System.out.println("Unable to get background model for term: " + te1.getTerm());
 				bgTerm = new TermEntry(te1.getTerm(), 1, 1);
 			} 
 			
