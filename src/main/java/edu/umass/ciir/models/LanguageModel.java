@@ -268,25 +268,25 @@ public class LanguageModel implements Cloneable {
     	// tri-grams.  These will only have one entry since the term
     	// at the end is distinct.
     	// THIS IS A HACK!
-    	if (numTokens > 2 && entry.getFrequency() == 1) {
-    		String[] terms = entry.getTerm().split(" ");
-    		ArrayList<TermEntry> suffixTerms = m_suffixList.get(terms[2]);
-    		if (suffixTerms == null) {
-    			suffixTerms = new ArrayList<TermEntry>();
-    			suffixTerms.add(entry);
-    			m_suffixList.put(terms[2], suffixTerms);
-//    		} else {
-//    			boolean found = false;
-//    			for (TermEntry te : suffixTerms) {
-//    				if (te.equals(entry)) {
-//    					found = true;
-//    				}
-//    			}
-//    			if (!found) {
-//    				suffixTerms.add(entry);
-//    			}
-    		}
-    	}
+//    	if (numTokens > 2 && entry.getFrequency() == 1) {
+//    		String[] terms = entry.getTerm().split(" ");
+//    		ArrayList<TermEntry> suffixTerms = m_suffixList.get(terms[2]);
+//    		if (suffixTerms == null) {
+//    			suffixTerms = new ArrayList<TermEntry>();
+//    			suffixTerms.add(entry);
+//    			m_suffixList.put(terms[2], suffixTerms);
+////    		} else {
+////    			boolean found = false;
+////    			for (TermEntry te : suffixTerms) {
+////    				if (te.equals(entry)) {
+////    					found = true;
+////    				}
+////    			}
+////    			if (!found) {
+////    				suffixTerms.add(entry);
+////    			}
+//    		}
+//    	}
     	if (numTokens == 1) {
     		m_collectionFrequency++;
     	}

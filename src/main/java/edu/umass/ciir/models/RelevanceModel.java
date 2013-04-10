@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.lemurproject.galago.core.parse.Document;
+import org.lemurproject.galago.core.retrieval.Retrieval;
 import org.lemurproject.galago.core.retrieval.ScoredDocument;
 import org.lemurproject.galago.core.scoring.WeightedTerm;
 import org.lemurproject.galago.core.tools.Search;
@@ -15,14 +16,22 @@ import org.lemurproject.galago.tupleflow.Parameters;
 
 public class RelevanceModel {
 
-    Search m_search;
+    Retrieval m_retrieval;
     
     Parameters parameters;
     
     private HashMap<String, Integer> lengths;
     
     public RelevanceModel(Search search) {
-        m_search = search;
+        m_retrieval = search.getRetrieval();
+        Parameters p1 = new Parameters();
+        p1.set("terms", true);
+        p1.set("tags", true);
+        parameters = p1;
+    }
+    
+    public RelevanceModel(Retrieval r) {
+        m_retrieval = r;
         Parameters p1 = new Parameters();
         p1.set("terms", true);
         p1.set("tags", true);
@@ -138,7 +147,7 @@ public class RelevanceModel {
       Document doc;
       String term;
       for (ScoredDocument sd : results) {
-        doc = m_search.getDocument(sd.documentName, parameters);
+        doc = m_retrieval.getDocument(sd.documentName, parameters);
         if (doc != null) {
         for (String s : doc.terms) {
             term = s;
