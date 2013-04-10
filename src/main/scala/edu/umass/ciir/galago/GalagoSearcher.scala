@@ -1,16 +1,14 @@
 package edu.umass.ciir.galago
 
-import java.io.{ File, IOException}
+import java.io.{File, IOException}
 import org.lemurproject.galago.core.index.AggregateReader
 import org.lemurproject.galago.core.retrieval.query.{AnnotatedNode, StructuredQuery, Node}
-import org.lemurproject.galago.core.tools.Search
 import org.lemurproject.galago.tupleflow.Parameters
-import scala.collection.JavaConversions._
 import org.lemurproject.galago.core.parse.Document
 import scala.collection.JavaConversions._
-import org.lemurproject.galago.core.retrieval.{ScoredPassage, ScoredDocument}
+import org.lemurproject.galago.core.retrieval.{RetrievalFactory, ScoredPassage, ScoredDocument}
 
-class GalagoSearcher(jsonConfigFile: String, galagoUseLocalIndex: Boolean, galagoSrv: String = "", galagoPort: String="", val usePassage:Boolean = false) {
+class GalagoSearcher(jsonConfigFile: String, galagoUseLocalIndex: Boolean, galagoSrv: String = "", galagoPort: String = "", val usePassage: Boolean = false) {
 
   val globalParameters = Parameters.parse(new File(jsonConfigFile))
 
@@ -22,17 +20,17 @@ class GalagoSearcher(jsonConfigFile: String, galagoUseLocalIndex: Boolean, galag
 
   val queryParams = new Parameters
   val defaultSmoothingMu = globalParameters.getDouble("defaultSmoothingMu")
-  val m_searcher = new Search(globalParameters)
+  val m_searcher = RetrievalFactory.instance(globalParameters)
 
 
-  def getDocuments(documentNames:Seq[String], params:Parameters= new Parameters()):Map[String, Document] = {
+  def getDocuments(documentNames: Seq[String], params: Parameters = new Parameters()): Map[String, Document] = {
     val p = new Parameters()
     p.copyFrom(globalParameters)
     p.copyFrom(params)
     getDocuments_(documentNames, p)
   }
 
-  private def getDocuments_(identifier:Seq[String], p:Parameters, tries: Int=5):Map[String, Document] ={
+  private def getDocuments_(identifier: Seq[String], p: Parameters, tries: Int = 5): Map[String, Document] = {
     try {
       m_searcher synchronized {
         val docmap = m_searcher.getDocuments(identifier, p)
@@ -62,11 +60,10 @@ class GalagoSearcher(jsonConfigFile: String, galagoUseLocalIndex: Boolean, galag
   def getStatistics(query: String): AggregateReader.NodeStatistics = {
     m_searcher synchronized {
       try {
-        val r = m_searcher.getRetrieval
         val root = StructuredQuery.parse(query)
         root.getNodeParameters.set("queryType", "count")
-        val transformed = r.transformQuery(root, queryParams)
-        r.nodeStatistics(transformed)
+        val transformed = m_searcher.transformQuery(root, queryParams)
+        m_searcher.nodeStatistics(transformed)
       } catch {
         case e: Exception => {
           println("Error getting statistics for query: " + query)
@@ -77,7 +74,7 @@ class GalagoSearcher(jsonConfigFile: String, galagoUseLocalIndex: Boolean, galag
   }
 
 
-  def getFieldTermCount(cleanTerm:String, field: String): Long = {
+  def getFieldTermCount(cleanTerm: String, field: String): Long = {
     if (cleanTerm.length > 0) {
       val transformedText = "\"" + cleanTerm + "\"" + "." + field
       val statistics = getStatistics(transformedText)
@@ -88,15 +85,14 @@ class GalagoSearcher(jsonConfigFile: String, galagoUseLocalIndex: Boolean, galag
   }
 
 
-
-
-  def retrieveAnnotatedScoredDocuments(query:String, params:Parameters, resultCount:Int, debugQuery:((Node, Node)=> Unit)=((x,y)=>{})):Seq[(ScoredDocument, AnnotatedNode)] = {
-    params.set("annotate",true)
-    for(scoredAnnotatedDoc <- retrieveScoredDocuments(query, params, resultCount, debugQuery)) yield {
+  def retrieveAnnotatedScoredDocuments(query: String, params: Parameters, resultCount: Int, debugQuery: ((Node, Node) => Unit) = ((x, y) => {})): Seq[(ScoredDocument, AnnotatedNode)] = {
+    params.set("annotate", true)
+    for (scoredAnnotatedDoc <- retrieveScoredDocuments(query, params, resultCount, debugQuery)) yield {
       (scoredAnnotatedDoc, scoredAnnotatedDoc.annotation)
     }
   }
-  def retrieveScoredDocuments(query:String, params:Parameters, resultCount:Int, debugQuery:((Node, Node)=> Unit)=((x,y)=>{})):Seq[ScoredDocument] = {
+
+  def retrieveScoredDocuments(query: String, params: Parameters, resultCount: Int, debugQuery: ((Node, Node) => Unit) = ((x, y) => {})): Seq[ScoredDocument] = {
     val p = new Parameters()
     p.copyFrom(globalParameters)
     p.copyFrom(params)
@@ -105,14 +101,14 @@ class GalagoSearcher(jsonConfigFile: String, galagoUseLocalIndex: Boolean, galag
     p.set("requested", resultCount)
     m_searcher synchronized {
       val root = StructuredQuery.parse(query)
-      val transformed = m_searcher.getRetrieval.transformQuery(root, p)
+      val transformed = m_searcher.transformQuery(root, p)
       debugQuery(root, transformed)
-      m_searcher.getRetrieval.runQuery(transformed, p)
+      m_searcher.runQuery(transformed, p)
     }
   }
 
-  def retrieveScoredPassages(query:String, params:Parameters, resultCount:Int, debugQuery:((Node, Node)=> Unit)=((x,y)=>{})):Seq[ScoredPassage]= {
-    retrieveScoredDocuments(query,params, resultCount, debugQuery).map(_.asInstanceOf[ScoredPassage])
+  def retrieveScoredPassages(query: String, params: Parameters, resultCount: Int, debugQuery: ((Node, Node) => Unit) = ((x, y) => {})): Seq[ScoredPassage] = {
+    retrieveScoredDocuments(query, params, resultCount, debugQuery).map(_.asInstanceOf[ScoredPassage])
   }
 
   /**
@@ -120,12 +116,14 @@ class GalagoSearcher(jsonConfigFile: String, galagoUseLocalIndex: Boolean, galag
    * @param resultList
    * @return
    */
-  def fetchDocuments(resultList:Seq[ScoredDocument]): Seq[FetchedScoredDocument] = {
+  def fetchDocuments(resultList: Seq[ScoredDocument]): Seq[FetchedScoredDocument] = {
     val docNames = resultList.map(_.documentName)
     val docs = getDocuments(docNames)
-    for(scoredDoc <- resultList) yield {
+    for (scoredDoc <- resultList) yield {
       FetchedScoredDocument(scoredDoc,
-        docs.getOrElse(scoredDoc.documentName, {throw new DocumentNotInIndexException(scoredDoc.documentName)})
+        docs.getOrElse(scoredDoc.documentName, {
+          throw new DocumentNotInIndexException(scoredDoc.documentName)
+        })
       )
     }
   }
@@ -135,12 +133,14 @@ class GalagoSearcher(jsonConfigFile: String, galagoUseLocalIndex: Boolean, galag
    * @param resultList
    * @return
    */
-  def fetchPassages(resultList:Seq[ScoredPassage]): Seq[FetchedScoredPassage] = {
+  def fetchPassages(resultList: Seq[ScoredPassage]): Seq[FetchedScoredPassage] = {
     val docNames = resultList.map(_.documentName)
     val docs = getDocuments(docNames)
-    for(scoredPassage <- resultList) yield {
+    for (scoredPassage <- resultList) yield {
       FetchedScoredPassage(scoredPassage,
-        docs.getOrElse(scoredPassage.documentName, {throw new DocumentNotInIndexException(scoredPassage.documentName)})
+        docs.getOrElse(scoredPassage.documentName, {
+          throw new DocumentNotInIndexException(scoredPassage.documentName)
+        })
       )
     }
   }
@@ -150,8 +150,9 @@ class GalagoSearcher(jsonConfigFile: String, galagoUseLocalIndex: Boolean, galag
   }
 }
 
-case class FetchedScoredDocument(scored:ScoredDocument, doc:Document)
-case class FetchedScoredPassage(scored:ScoredPassage, doc:Document)
+case class FetchedScoredDocument(scored: ScoredDocument, doc: Document)
 
-class DocumentNotInIndexException(val docName:String) extends RuntimeException
+case class FetchedScoredPassage(scored: ScoredPassage, doc: Document)
+
+class DocumentNotInIndexException(val docName: String) extends RuntimeException
 
