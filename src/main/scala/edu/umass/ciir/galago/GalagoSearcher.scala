@@ -5,21 +5,21 @@ import org.lemurproject.galago.core.index.AggregateReader
 import org.lemurproject.galago.core.retrieval.query.{AnnotatedNode, StructuredQuery, Node}
 import org.lemurproject.galago.tupleflow.Parameters
 import org.lemurproject.galago.core.parse.Document
+
 import scala.collection.JavaConversions._
-import org.lemurproject.galago.core.retrieval.{RetrievalFactory, ScoredPassage, ScoredDocument}
+import org.lemurproject.galago.core.retrieval.{Retrieval, RetrievalFactory, ScoredPassage, ScoredDocument}
 
-class GalagoSearcher(jsonConfigFile: String, galagoUseLocalIndex: Boolean, galagoSrv: String = "", galagoPort: String = "", val usePassage: Boolean = false) {
+class GalagoSearcher(globalParameters:Parameters) {
 
-  val globalParameters = Parameters.parse(new File(jsonConfigFile))
-
-  if (!galagoUseLocalIndex) {
-    val remoteIndex = "http://" + galagoSrv + ":" + galagoPort
-    globalParameters.set("index", remoteIndex)
-  }
+//  val globalParameters = Parameters.parse(new File(jsonConfigFile))
+//  
+//  if (!galagoUseLocalIndex) {
+//    val remoteIndex = "http://" + galagoSrv + ":" + galagoPort
+//    globalParameters.set("index", remoteIndex)
+//  }
   if (globalParameters.isString("index")) println("** Loading index from: " + globalParameters.getString("index"))
 
   val queryParams = new Parameters
-  val defaultSmoothingMu = globalParameters.getDouble("defaultSmoothingMu")
   val m_searcher = RetrievalFactory.instance(globalParameters)
 
 
@@ -32,10 +32,8 @@ class GalagoSearcher(jsonConfigFile: String, galagoUseLocalIndex: Boolean, galag
 
   private def getDocuments_(identifier: Seq[String], p: Parameters, tries: Int = 5): Map[String, Document] = {
     try {
-      m_searcher synchronized {
         val docmap = m_searcher.getDocuments(identifier, p)
         docmap.toMap
-      }
     } catch {
       case ex: NullPointerException => {
         println("NPE while fetching documents " + identifier)
@@ -58,19 +56,18 @@ class GalagoSearcher(jsonConfigFile: String, galagoUseLocalIndex: Boolean, galag
 
 
   def getStatistics(query: String): AggregateReader.NodeStatistics = {
-    m_searcher synchronized {
       try {
         val root = StructuredQuery.parse(query)
         root.getNodeParameters.set("queryType", "count")
         val transformed = m_searcher.transformQuery(root, queryParams)
-        m_searcher.nodeStatistics(transformed)
+        m_searcher.getNodeStatistics(transformed)
+        //m_searcher.nodeStatistics(transformed)
       } catch {
         case e: Exception => {
           println("Error getting statistics for query: " + query)
           throw e
         }
       }
-    }
   }
 
 
@@ -99,12 +96,10 @@ class GalagoSearcher(jsonConfigFile: String, galagoUseLocalIndex: Boolean, galag
     p.set("startAt", 0)
     p.set("resultCount", resultCount)
     p.set("requested", resultCount)
-    m_searcher synchronized {
       val root = StructuredQuery.parse(query)
       val transformed = m_searcher.transformQuery(root, p)
       debugQuery(root, transformed)
       m_searcher.runQuery(transformed, p)
-    }
   }
 
   def retrieveScoredPassages(query: String, params: Parameters, resultCount: Int, debugQuery: ((Node, Node) => Unit) = ((x, y) => {})): Seq[ScoredPassage] = {
@@ -143,6 +138,10 @@ class GalagoSearcher(jsonConfigFile: String, galagoUseLocalIndex: Boolean, galag
         })
       )
     }
+  }
+
+  def getUnderlyingRetrieval() : Retrieval = {
+    m_searcher
   }
 
 

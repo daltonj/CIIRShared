@@ -2,6 +2,8 @@ package edu.umass.ciir.galago
 
 import scala.collection.JavaConversions._
 import org.lemurproject.galago.core.retrieval.query.Node
+import org.lemurproject.galago.tupleflow.Parameters
+import java.io.File
 
 /**
  * User: dietz
@@ -22,11 +24,11 @@ object TestGalago {
     passageMultiSeqDep()
   }
 
-  val searchSentenceJson = "params/aristo-search-sentence.json"
-  val searchSentencePassageJson="params/aristo-search-sentence-passage.json"
+  val searchSentenceJson = Parameters.parse(new File("params/aristo-search-sentence.json"))
+  val searchSentencePassageJson= Parameters.parse(new File("params/aristo-search-sentence-passage.json"))
   
   def seqDep() {
-    val galago = new GalagoSearcher(searchSentenceJson, true)
+    val galago = new GalagoSearcher(searchSentenceJson)
 
     val paramQuery = GalagoQueryBuilder.seqdep("when does the economy collapse?", Some((0.5, 0.4, 0.1)))
     val result = galago.retrieveScoredDocuments(resultCount= 20, query = paramQuery.queryStr, params = paramQuery.parameters)
@@ -43,7 +45,7 @@ object TestGalago {
   }
 
   def multiSeqDep() {
-    val galago = new GalagoSearcher(searchSentenceJson, true)
+    val galago = new GalagoSearcher(searchSentenceJson)
 
     val weightedQuestions = Seq(
       "when does the economy collapse?" -> 0.5,
@@ -64,8 +66,8 @@ object TestGalago {
 
   }
   def passageMultiSeqDep() {
-    val galago = new GalagoSearcher(searchSentenceJson, true)
-    val galagoPassage = new GalagoSearcher(searchSentencePassageJson, true)
+    val galago = new GalagoSearcher(searchSentenceJson)
+    val galagoPassage = new GalagoSearcher(searchSentencePassageJson)
 
     val weightedQuestions = Seq(
       "when does The Economy Collapse?" -> 0.5,
