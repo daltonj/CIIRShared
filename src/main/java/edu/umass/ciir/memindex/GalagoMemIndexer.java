@@ -15,13 +15,13 @@ public class GalagoMemIndexer {
 	 
 	 public GalagoMemIndexer(MemoryIndex index) {
 			m_index = index;
-			m_curDoc = index.getDocumentCount();
+			m_curDoc = index.documentsInIndex();
 		}
 		
 		public GalagoMemIndexer(MemoryIndex index, Corpus corpus) {
 			m_index = index;
 			m_corpus = corpus;
-			m_curDoc = index.getDocumentCount();
+			m_curDoc = index.documentsInIndex();
 		}
 		
 		public void addDocument(Document doc) 
