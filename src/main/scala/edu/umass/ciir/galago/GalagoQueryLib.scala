@@ -32,13 +32,18 @@ object GalagoQueryLib {
   }
 
   def buildWeightedCombine(weightedQueryStrs:Seq[(String, Double)]):String = {
+    val filteredWeightedQueryStrs = weightedQueryStrs.filter(_._1.length > 0)
+
     val weights =
-      for((weight, idx) <- weightedQueryStrs.map(_._2).zipWithIndex) yield {
+      for((weight, idx) <- filteredWeightedQueryStrs.map(_._2).zipWithIndex) yield {
         idx+"="+weight
       }
 
-    val subqueries = weightedQueryStrs.map(_._1)
-    "#combine"+weights.mkString(":",":","")+"("+subqueries.mkString(" ") + ")"
+    if(filteredWeightedQueryStrs.isEmpty) ""
+    else {
+      val subqueries = filteredWeightedQueryStrs.map(_._1)
+      "#combine"+weights.mkString(":",":","")+"("+subqueries.mkString(" ") + ")"
+    }
   }
 
   private def buildMultiTermQuery(phrases: Seq[String]): String = {
