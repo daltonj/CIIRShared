@@ -32,9 +32,10 @@ object GalagoQueryLib {
   }
 
   def buildWeightedCombine(weightedQueryStrs:Seq[(String, Double)]):String = {
-    val filteredWeightedQueryStrs = weightedQueryStrs.filter(_._1.length > 0)
+    val filteredWeightedQueryStrs =
+      weightedQueryStrs.filter({case (subquery, weight) => subquery.length > 0 && weight > 0.0})
 
-    val weights =
+    val weightsStr =
       for((weight, idx) <- filteredWeightedQueryStrs.map(_._2).zipWithIndex) yield {
         idx+"="+weight
       }
@@ -42,7 +43,7 @@ object GalagoQueryLib {
     if(filteredWeightedQueryStrs.isEmpty) ""
     else {
       val subqueries = filteredWeightedQueryStrs.map(_._1)
-      "#combine"+weights.mkString(":",":","")+"("+subqueries.mkString(" ") + ")"
+      "#combine"+weightsStr.mkString(":",":","")+"("+subqueries.mkString(" ") + ")"
     }
   }
 
