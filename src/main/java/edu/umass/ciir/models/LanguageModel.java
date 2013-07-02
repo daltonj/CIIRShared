@@ -125,10 +125,10 @@ public class LanguageModel implements Cloneable {
     		
     	}
     	// update document frequencies
-    	for (String term : m_distinctTermsInLastDoc) {
-    		TermEntry t = getTermEntry(term);
-    		t.incrementDocFrequency();
-    	}
+//    	for (String term : m_distinctTermsInLastDoc) {
+//    		TermEntry t = getTermEntry(term);
+//    		t.incrementDocFrequency();
+//    	}
     } 
     
     /**
@@ -144,7 +144,9 @@ public class LanguageModel implements Cloneable {
     	for (TermEntry te : lm1Entries) {
     		addEntry(te);
     		// NOTE: We assume that the LM has already been distinctified.
-    		te.incrementDocFrequency();
+    		//te.incrementDocFrequency();
+            TermEntry modelTe = getTermEntry(te.getTerm());
+            modelTe.addDocFrequency(te.getDocumentFrequency());
     	}
     } 
     
@@ -312,7 +314,7 @@ public class LanguageModel implements Cloneable {
     		m_entries.put(term, entry);
     	} else {
     		entry.addTermFrequency(te.getFrequency());
-    		entry.addDocFrequency(te.getDocumentFrequency());
+    	//	entry.addDocFrequency(te.getDocumentFrequency());
     	}
     	// only count unigrams
     	if (te.getNumTokens() == 1) {

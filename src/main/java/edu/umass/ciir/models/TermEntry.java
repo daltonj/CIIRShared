@@ -17,7 +17,7 @@ public class TermEntry implements Comparable<TermEntry> {
 	public TermEntry(String term, long termFrequency, int numTokens) {
 		m_term = term;
 		m_termFrequency = termFrequency;
-		m_docFrequency = 0;
+		m_docFrequency = 1;
 		m_numTokens = numTokens;
 		m_probability = 0.0;
 		m_weight = 0.0;
@@ -86,7 +86,7 @@ public class TermEntry implements Comparable<TermEntry> {
 	}
 
 	public void incrementDocFrequency() {
-		m_docFrequency++;
+		m_docFrequency+= 1;
 	}
 	
 	public void addDocFrequency(long docFreq) {

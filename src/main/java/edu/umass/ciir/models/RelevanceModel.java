@@ -21,15 +21,7 @@ public class RelevanceModel {
     Parameters parameters;
     
     private HashMap<String, Integer> lengths;
-    
-    public RelevanceModel(Search search) {
-        m_retrieval = search.getRetrieval();
-        Parameters p1 = new Parameters();
-        p1.set("terms", true);
-        p1.set("tags", true);
-        parameters = p1;
-    }
-    
+
     public RelevanceModel(Retrieval r) {
         m_retrieval = r;
         Parameters p1 = new Parameters();
