@@ -1,13 +1,14 @@
 package edu.umass.ciir.galago
 
 import java.io.{File, IOException}
-import org.lemurproject.galago.core.index.AggregateReader
 import org.lemurproject.galago.core.retrieval.query.{AnnotatedNode, StructuredQuery, Node}
 import org.lemurproject.galago.tupleflow.Parameters
 import org.lemurproject.galago.core.parse.Document
 
 import scala.collection.JavaConversions._
 import org.lemurproject.galago.core.retrieval.{Retrieval, RetrievalFactory, ScoredPassage, ScoredDocument}
+import org.lemurproject.galago.core.index.stats.NodeStatistics
+import org.lemurproject.galago.core.parse.Document.DocumentComponents
 
 class GalagoSearcher(globalParameters:Parameters) {
 
@@ -32,7 +33,7 @@ class GalagoSearcher(globalParameters:Parameters) {
 
   private def getDocuments_(identifier: Seq[String], p: Parameters, tries: Int = 5): Map[String, Document] = {
     try {
-        val docmap = m_searcher.getDocuments(identifier, p)
+        val docmap = m_searcher.getDocuments(identifier, new DocumentComponents(p))
         docmap.toMap
     } catch {
       case ex: NullPointerException => {
@@ -55,7 +56,7 @@ class GalagoSearcher(globalParameters:Parameters) {
   }
 
 
-  def getStatistics(query: String): AggregateReader.NodeStatistics = {
+  def getStatistics(query: String): NodeStatistics = {
       try {
         val root = StructuredQuery.parse(query)
         root.getNodeParameters.set("queryType", "count")

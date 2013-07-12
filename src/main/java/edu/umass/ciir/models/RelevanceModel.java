@@ -1,18 +1,13 @@
 package edu.umass.ciir.models;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import org.lemurproject.galago.core.parse.Document;
 import org.lemurproject.galago.core.retrieval.Retrieval;
 import org.lemurproject.galago.core.retrieval.ScoredDocument;
-import org.lemurproject.galago.core.scoring.WeightedTerm;
-import org.lemurproject.galago.core.tools.Search;
+import org.lemurproject.galago.core.retrieval.prf.WeightedTerm;
 import org.lemurproject.galago.tupleflow.Parameters;
+
+import java.io.IOException;
+import java.util.*;
 
 public class RelevanceModel {
 
@@ -139,7 +134,7 @@ public class RelevanceModel {
       Document doc;
       String term;
       for (ScoredDocument sd : results) {
-        doc = m_retrieval.getDocument(sd.documentName, parameters);
+        doc = m_retrieval.getDocument(sd.documentName, new Document.DocumentComponents(parameters));
         if (doc != null) {
         for (String s : doc.terms) {
             term = s;
