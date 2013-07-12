@@ -10,35 +10,7 @@
     <galago.version>3.5</galago.version>
   </properties>
 
-  <repositories>
-    <repository>
-      <id>scala-tools.org</id>
-      <name>Scala-Tools Maven2 Repository</name>
-      <url>http://scala-tools.org/repo-releases</url>
-    </repository>
-
-    <repository>
-      <id>general</id>
-      <name>general</name>
-      <url>http://repo1.maven.org/maven2</url>
-    </repository>
-  </repositories>
-
-  <pluginRepositories>
-    <pluginRepository>
-      <id>scala-tools.org</id>
-      <name>Scala-tools Maven2 Repository</name>
-      <url>http://scala-tools.org/repo-releases</url>
-    </pluginRepository>
-
-    <pluginRepository>
-      <id>protoc-plugin</id>
-      <url>http://sergei-ivanov.github.com/maven-protoc-plugin/repo/releases/</url>
-    </pluginRepository>
-  </pluginRepositories>
-
   <dependencies>
-
     <dependency>
       <groupId>org.lemurproject.galago</groupId>
       <artifactId>core</artifactId>
