@@ -37,5 +37,14 @@ object GalagoQueryBuilder {
     ParametrizedQuery (GalagoQueryLib.buildSeqDepForString(question), param)
   }
 
+  def expandQuery(origQuery:ParametrizedQuery, expansionTerms:Seq[(String, Double)], origWeight:Double):ParametrizedQuery = {
+    val queryStr =
+      GalagoQueryLib.buildWeightedCombine(Seq(
+        origQuery.queryStr -> origWeight,
+        GalagoQueryLib.buildWeightedCombine(expansionTerms) -> (1.0 - origWeight)
+      ))
+    ParametrizedQuery(queryStr, origQuery.parameters)
+  }
+
 }
 case class ParametrizedQuery(queryStr:String, parameters:Parameters)
