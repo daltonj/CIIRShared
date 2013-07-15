@@ -89,6 +89,11 @@ object GalagoQueryLib {
     p
   }
 
+  def paramSmoothingMu(p:Parameters, smoothingMu:Double):Parameters = {
+    p.set("defaultSmoothingMu", smoothingMu)
+    p
+  }
+
   def paramPassageRetrieval(p:Parameters, workingSet:List[String], defaultPassageSize:Int=50, defaultPassageShift:Int = 25):Parameters = {
     p.set("passageQuery", true)
     p.set("passageSize", defaultPassageSize)
