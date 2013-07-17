@@ -9,14 +9,33 @@ import org.lemurproject.galago.core.parse.Document
 import scala.collection.JavaConversions._
 import org.lemurproject.galago.core.retrieval.{Retrieval, RetrievalFactory, ScoredPassage, ScoredDocument}
 
+object GalagoSearcher {
+  def apply(p : Parameters): GalagoSearcher = {
+    new GalagoSearcher(p)
+  }
+
+  def apply(index : String): GalagoSearcher = {
+    val p = new Parameters
+    p.set("index", index)
+    new GalagoSearcher(p)
+  }
+
+  def apply(jsonConfigFile : File): GalagoSearcher = {
+    val p = Parameters.parse(jsonConfigFile)
+    new GalagoSearcher(p)
+  }
+
+  def apply(server: String, port: Int): GalagoSearcher = {
+    val p = new Parameters
+    val remoteIndex = "http://" + server + ":" + port
+    p.set("index", remoteIndex)
+    new GalagoSearcher(p)
+  }
+
+}
+
 class GalagoSearcher(globalParameters:Parameters) {
 
-//  val globalParameters = Parameters.parse(new File(jsonConfigFile))
-//  
-//  if (!galagoUseLocalIndex) {
-//    val remoteIndex = "http://" + galagoSrv + ":" + galagoPort
-//    globalParameters.set("index", remoteIndex)
-//  }
   if (globalParameters.isString("index")) println("** Loading index from: " + globalParameters.getString("index"))
 
   val queryParams = new Parameters
@@ -82,17 +101,20 @@ class GalagoSearcher(globalParameters:Parameters) {
   }
 
 
-  def retrieveAnnotatedScoredDocuments(query: String, params: Parameters, resultCount: Int, debugQuery: ((Node, Node) => Unit) = ((x, y) => {})): Seq[(ScoredDocument, AnnotatedNode)] = {
+  def retrieveAnnotatedScoredDocuments(query: String, params:  Parameters, resultCount: Int, debugQuery: ((Node, Node) => Unit) = ((x, y) => {})): Seq[(ScoredDocument, AnnotatedNode)] = {
     params.set("annotate", true)
-    for (scoredAnnotatedDoc <- retrieveScoredDocuments(query, params, resultCount, debugQuery)) yield {
+    for (scoredAnnotatedDoc <- retrieveScoredDocuments(query, Some(params), resultCount, debugQuery)) yield {
       (scoredAnnotatedDoc, scoredAnnotatedDoc.annotation)
     }
   }
 
-  def retrieveScoredDocuments(query: String, params: Parameters, resultCount: Int, debugQuery: ((Node, Node) => Unit) = ((x, y) => {})): Seq[ScoredDocument] = {
+  def retrieveScoredDocuments(query: String, params: Option[Parameters] = None, resultCount: Int, debugQuery: ((Node, Node) => Unit) = ((x, y) => {})): Seq[ScoredDocument] = {
     val p = new Parameters()
     p.copyFrom(globalParameters)
-    p.copyFrom(params)
+    params match {
+      case Some(params) => p.copyFrom(params)
+      case None => {}
+    }
     p.set("startAt", 0)
     p.set("resultCount", resultCount)
     p.set("requested", resultCount)
@@ -102,7 +124,7 @@ class GalagoSearcher(globalParameters:Parameters) {
       m_searcher.runQuery(transformed, p)
   }
 
-  def retrieveScoredPassages(query: String, params: Parameters, resultCount: Int, debugQuery: ((Node, Node) => Unit) = ((x, y) => {})): Seq[ScoredPassage] = {
+  def retrieveScoredPassages(query: String, params: Option[Parameters] = None, resultCount: Int, debugQuery: ((Node, Node) => Unit) = ((x, y) => {})): Seq[ScoredPassage] = {
     retrieveScoredDocuments(query, params, resultCount, debugQuery).map(_.asInstanceOf[ScoredPassage])
   }
 
