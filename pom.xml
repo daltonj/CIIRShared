@@ -21,6 +21,12 @@
             <name>general</name>
             <url>http://repo1.maven.org/maven2</url>
         </repository>
+
+       <repository>
+            <id>dev-iesl.cs.umass.edu</id>
+            <name>dev-iesl.cs.umass.edu</name>
+            <url>https://dev-iesl.cs.umass.edu/nexus/content/repositories/releases</url>
+        </repository>
     </repositories>
 
 <pluginRepositories>
