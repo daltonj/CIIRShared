@@ -6,7 +6,7 @@
     <version>1.0</version>
     <inceptionYear>2011</inceptionYear>
     <properties>
-        <scala.version>2.9.2</scala.version>
+        <scala.version>2.10.1</scala.version>
     </properties>
 
  <repositories>

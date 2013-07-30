@@ -31,7 +31,7 @@ object TestGalago {
     val galago = new GalagoSearcher(searchSentenceJson)
 
     val paramQuery = GalagoQueryBuilder.seqdep("when does the economy collapse?", Some((0.5, 0.4, 0.1)))
-    val result = galago.retrieveScoredDocuments(resultCount= 20, query = paramQuery.queryStr, params = paramQuery.parameters)
+    val result = galago.retrieveScoredDocuments(resultCount= 20, query = paramQuery.queryStr, params = Some(paramQuery.parameters))
 
     for(scoredDoc <- result) {
       println(scoredDoc.rank +": "+ scoredDoc.documentName)
@@ -53,7 +53,7 @@ object TestGalago {
       "burst of the housing bubble" -> 0.2
     )
     val paramQuery = GalagoQueryBuilder.weightedMultiSeqdep(weightedQuestions, Some((0.5, 0.4, 0.1)))
-    val result = galago.retrieveScoredDocuments(resultCount= 20, query = paramQuery.queryStr, params = paramQuery.parameters)
+    val result = galago.retrieveScoredDocuments(resultCount= 20, query = paramQuery.queryStr, params = Some(paramQuery.parameters))
 
     for(scoredDoc <- result) {
       println(scoredDoc.rank +": "+ scoredDoc.documentName)
@@ -80,10 +80,10 @@ object TestGalago {
     }
 
     val paramQuery1 = GalagoQueryBuilder.weightedMultiSeqdep(weightedQuestions, Some((0.5, 0.4, 0.1)))
-    val result1 = galago.retrieveScoredDocuments(resultCount= 20, query = paramQuery1.queryStr, params = paramQuery1.parameters, debugQuery = queryDebugger)
+    val result1 = galago.retrieveScoredDocuments(resultCount= 20, query = paramQuery1.queryStr, params = Some(paramQuery1.parameters), debugQuery = queryDebugger)
 
     val paramQuery = GalagoQueryBuilder.passageRetrieval(paramQuery1, result1.map(_.documentName).toList, 50, 25)
-    val result = galagoPassage.retrieveScoredPassages(resultCount= 20, query = paramQuery.queryStr, params = paramQuery.parameters)
+    val result = galagoPassage.retrieveScoredPassages(resultCount= 20, query = paramQuery.queryStr, params = Some(paramQuery.parameters))
 
     for(scoredPassage <- result) {
       println(scoredPassage.rank +": "+ scoredPassage.documentName+" ("+scoredPassage.begin+" - "+scoredPassage.end+")")
