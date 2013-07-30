@@ -90,7 +90,7 @@ object GalagoQueryLib {
   }
 
   def paramSmoothingMu(p:Parameters, smoothingMu:Double):Parameters = {
-    p.set("defaultSmoothingMu", smoothingMu)
+    p.set("mu", smoothingMu)
     p
   }
 
