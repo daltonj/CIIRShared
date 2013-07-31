@@ -14,13 +14,13 @@ object GalagoQueryLib {
   // ============== build raw query strings =============
 
   def buildSeqDepForString(string: String): String = {
-    val filteredString = normalize(string).filterNot(StopWordList.isStopWord(_))
-    if (filteredString.size > 0) "#seqdep(" + filteredString.mkString(" ") + ")"
+    val filteredString = normalize(string).filterNot(StopWordList.isStopWord)
+    if (filteredString.size > 0) "#sdm(" + filteredString.mkString(" ") + ")"
     else ""
   }
 
   def buildTermQueryForString(string:String):String = {
-    val filteredString = normalize(string).filterNot(StopWordList.isStopWord(_))
+    val filteredString = normalize(string).filterNot(StopWordList.isStopWord)
     if (filteredString.size > 0)  filteredString.mkString(" ")
     else ""
 
@@ -28,7 +28,7 @@ object GalagoQueryLib {
 
 
   def buildMultiPhraseQuery(phrases: Seq[String]): String = {
-    "#combine(  " + phrases.map(buildSeqDepForString(_)).mkString(" ") + ")"
+    "#combine(  " + phrases.map(buildSeqDepForString).mkString(" ") + ")"
   }
 
   def buildWeightedCombine(weightedQueryStrs:Seq[(String, Double)]):String = {
@@ -58,7 +58,7 @@ object GalagoQueryLib {
   }
 
   private def buildMultiTermQuery(phrases: Seq[String]): String = {
-    "#combine(  " + phrases.flatMap(normalize(_).filterNot(StopWordList.isStopWord(_))).mkString(" ") + ")"
+    "#combine(  " + phrases.flatMap(normalize(_).filterNot(StopWordList.isStopWord)).mkString(" ") + ")"
   }
 
 

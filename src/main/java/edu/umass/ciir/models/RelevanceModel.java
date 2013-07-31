@@ -134,7 +134,9 @@ public class RelevanceModel {
       Document doc;
       String term;
       for (ScoredDocument sd : results) {
-        doc = m_retrieval.getDocument(sd.documentName, new Document.DocumentComponents(parameters));
+        Document.DocumentComponents docArgs = new Document.DocumentComponents();
+        docArgs.tokenize = true;
+        doc = m_retrieval.getDocument(sd.documentName, docArgs);
         if (doc != null) {
         for (String s : doc.terms) {
             term = s;

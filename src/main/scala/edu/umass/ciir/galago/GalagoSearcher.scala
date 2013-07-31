@@ -10,14 +10,14 @@ import org.lemurproject.galago.core.retrieval.{Retrieval, RetrievalFactory, Scor
 import org.lemurproject.galago.core.index.stats.NodeStatistics
 import org.lemurproject.galago.core.parse.Document.DocumentComponents
 
-class GalagoSearcher(globalParameters:Parameters) {
+class GalagoSearcher(globalParameters: Parameters) {
 
-//  val globalParameters = Parameters.parse(new File(jsonConfigFile))
-//  
-//  if (!galagoUseLocalIndex) {
-//    val remoteIndex = "http://" + galagoSrv + ":" + galagoPort
-//    globalParameters.set("index", remoteIndex)
-//  }
+  //  val globalParameters = Parameters.parse(new File(jsonConfigFile))
+  //
+  //  if (!galagoUseLocalIndex) {
+  //    val remoteIndex = "http://" + galagoSrv + ":" + galagoPort
+  //    globalParameters.set("index", remoteIndex)
+  //  }
   if (globalParameters.isString("index")) println("** Loading index from: " + globalParameters.getString("index"))
 
   val queryParams = new Parameters
@@ -33,8 +33,8 @@ class GalagoSearcher(globalParameters:Parameters) {
 
   private def getDocuments_(identifier: Seq[String], p: Parameters, tries: Int = 5): Map[String, Document] = {
     try {
-        val docmap = m_searcher.getDocuments(identifier, new DocumentComponents(p))
-        docmap.toMap
+      val docmap = m_searcher.getDocuments(identifier, new DocumentComponents(p))
+      docmap.toMap
     } catch {
       case ex: NullPointerException => {
         println("NPE while fetching documents " + identifier)
@@ -57,18 +57,18 @@ class GalagoSearcher(globalParameters:Parameters) {
 
 
   def getStatistics(query: String): NodeStatistics = {
-      try {
-        val root = StructuredQuery.parse(query)
-        root.getNodeParameters.set("queryType", "count")
-        val transformed = m_searcher.transformQuery(root, queryParams)
-        m_searcher.getNodeStatistics(transformed)
-        //m_searcher.nodeStatistics(transformed)
-      } catch {
-        case e: Exception => {
-          println("Error getting statistics for query: " + query)
-          throw e
-        }
+    try {
+      val root = StructuredQuery.parse(query)
+      root.getNodeParameters.set("queryType", "count")
+      val transformed = m_searcher.transformQuery(root, queryParams)
+      m_searcher.getNodeStatistics(transformed)
+      //m_searcher.nodeStatistics(transformed)
+    } catch {
+      case e: Exception => {
+        println("Error getting statistics for query: " + query)
+        throw e
       }
+    }
   }
 
 
@@ -97,10 +97,15 @@ class GalagoSearcher(globalParameters:Parameters) {
     p.set("startAt", 0)
     p.set("resultCount", resultCount)
     p.set("requested", resultCount)
-      val root = StructuredQuery.parse(query)
-      val transformed = m_searcher.transformQuery(root, p)
-      debugQuery(root, transformed)
-      m_searcher.runQuery(transformed, p)
+    val root = StructuredQuery.parse(query)
+    val transformed = m_searcher.transformQuery(root, p)
+    debugQuery(root, transformed)
+    val results = m_searcher.executeQuery(transformed, p).scoredDocuments
+    if (results != null) {
+      results
+    } else {
+      Seq()
+    }
   }
 
   def retrieveScoredPassages(query: String, params: Parameters, resultCount: Int, debugQuery: ((Node, Node) => Unit) = ((x, y) => {})): Seq[ScoredPassage] = {
@@ -141,7 +146,7 @@ class GalagoSearcher(globalParameters:Parameters) {
     }
   }
 
-  def getUnderlyingRetrieval() : Retrieval = {
+  def getUnderlyingRetrieval(): Retrieval = {
     m_searcher
   }
 

@@ -24,8 +24,8 @@ object TestGalago {
     passageMultiSeqDep()
   }
 
-  val searchSentenceJson = Parameters.parse(new File("params/aristo-search-sentence.json"))
-  val searchSentencePassageJson= Parameters.parse(new File("params/aristo-search-sentence-passage.json"))
+  val searchSentenceJson = Parameters.parseFile("params/aristo-search-sentence.json")
+  val searchSentencePassageJson= Parameters.parseFile("params/aristo-search-sentence-passage.json")
   
   def seqDep() {
     val galago = new GalagoSearcher(searchSentenceJson)
