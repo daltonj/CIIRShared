@@ -6,7 +6,7 @@
   <version>1.0.35-SNAPSHOT</version>
   <inceptionYear>2011</inceptionYear>
   <properties>
-    <scala.version>2.9.3</scala.version>
+    <scala.version>2.10.2</scala.version>
     <galago.version>3.5</galago.version>
     <javaVersion>1.6</javaVersion>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
