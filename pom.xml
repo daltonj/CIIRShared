@@ -22,12 +22,12 @@
     <!--</profiles>-->
 
     <properties>
-        <scala.version>2.9.2</scala.version>
+        <scala.version>2.10.1</scala.version>
     </properties>
 
     <groupId>edu.umass.ciir</groupId>
     <artifactId>ciirshared</artifactId>
-    <version>1.0</version>
+    <version>s2.10.1-g3.4-1.0</version>
     <inceptionYear>2011</inceptionYear>
 
  <repositories>
