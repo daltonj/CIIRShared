@@ -27,7 +27,7 @@
 
     <groupId>edu.umass.ciir</groupId>
     <artifactId>ciirshared</artifactId>
-    <version>1.0</version>
+    <version>s2.9.2-g3.4-1.0</version>
     <inceptionYear>2011</inceptionYear>
 
  <repositories>
