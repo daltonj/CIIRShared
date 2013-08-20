@@ -36,14 +36,7 @@ object GalagoSearcher {
 
 }
 
-class GalagoSearcher(globalParameters: Parameters) {
-
-  if (globalParameters.isString("index")) println("** Loading index from: " + globalParameters.getString("index"))
-
-  val queryParams = new Parameters
-  val m_searcher = RetrievalFactory.instance(globalParameters)
-
-
+object GalagoParamTools{
   def myParamCopyFrom(toParams:Parameters,fromParams:Parameters):Parameters = {
     for(key <- fromParams.getKeys) {
       if (fromParams.isBoolean(key)) toParams.set(key, fromParams.getBoolean(key))
@@ -54,16 +47,27 @@ class GalagoSearcher(globalParameters: Parameters) {
       else if  (fromParams.isList(key)) toParams.set(key, fromParams.getAsList(key))
       else {
         throw new RuntimeException("Try to copy params: errornous key "+key+" has unknown type. "+fromParams.toPrettyString)
-    }
+      }
 
-    //      else if (fromParams.isMap(key)){
-//        val mparams = new Parameters()
-//        fromParams.getMap(key).copyTo(mparams)
-//        toParams.set(key,mparams)
-//    }
+      //      else if (fromParams.isMap(key)){
+      //        val mparams = new Parameters()
+      //        fromParams.getMap(key).copyTo(mparams)
+      //        toParams.set(key,mparams)
+      //    }
     }
     toParams
   }
+}
+
+class GalagoSearcher(globalParameters: Parameters) {
+  import GalagoParamTools.myParamCopyFrom
+
+  if (globalParameters.isString("index")) println("** Loading index from: " + globalParameters.getString("index"))
+
+  val queryParams = new Parameters
+  val m_searcher = RetrievalFactory.instance(globalParameters)
+
+
 
 
   def getDocuments(documentNames: Seq[String], params: Parameters = new Parameters()): Map[String, Document] = {
@@ -97,7 +101,6 @@ class GalagoSearcher(globalParameters: Parameters) {
     }
   }
 
-
   def getStatistics(query: String): AggregateReader.NodeStatistics = {
     try {
 //      println("getStatistics "+query)
@@ -107,7 +110,6 @@ class GalagoSearcher(globalParameters: Parameters) {
       root.getNodeParameters.set("queryType", "count")
       val transformed = m_searcher.transformQuery(root, queryParams)
       m_searcher.getNodeStatistics(transformed)
-      //m_searcher.nodeStatistics(transformed)
     } catch {
       case e: Exception => {
         println("Error getting statistics for query: " + query)
@@ -116,16 +118,68 @@ class GalagoSearcher(globalParameters: Parameters) {
     }
   }
 
+  /**
+   * Select a delimiter character that is not contained in the query, so that we can instruct galago to leave special
+   * characters in our query by wrapping it. Say that delim = '.', we wrap it in
+   *
+   * @.query.
+   *
+   * @param query
+   * @return
+   */
+  def selectDelim(query:String):Char = {
+//    val delimSymbols = Seq('\"','.','!').iterator
+    val delimSymbols = Seq('\"').iterator
+    var found:Boolean = false
+    var delim:Char= ' '
+    while(!found && delimSymbols.hasNext){
+      val posDelim = delimSymbols.next()
+      if (query.indexOf(posDelim) < 0) {
+        delim = posDelim
+        found = true
+      }
+    }
+
+    if (!found){
+      // we are getting desparate here
+      val delim2Symbols = (Char.MinValue to Char.MaxValue).view.filter(_.isLetterOrDigit).iterator
+      while(!found && delim2Symbols.hasNext){
+        val posDelim = delim2Symbols.next()
+        if (query.indexOf(posDelim) < 0) {
+          delim = posDelim
+          found = true
+        }
+      }
+    }
+    if (!found) {
+      throw new RuntimeException(" failed to find delimiter char that is not contained in query "+query)
+    }
+    delim
+  }
+
+
 
   def getFieldTermCount(cleanTerm: String, field: String): Long = {
-    if (cleanTerm.length > 0 && (cleanTerm.indexOf('@') == 0)) {
-      val transformedText = "\"" + cleanTerm.replaceAllLiterally("\"","") + "\"" + "." + field
+    if (cleanTerm.length > 0 || cleanTerm.indexOf('#')>=0) {
+      val delim = selectDelim(cleanTerm)
+      val transformedText = "@"+delim + cleanTerm+delim+"" + "." + field
       val statistics = getStatistics(transformedText)
+//      println(statistics.nodeFrequency.toString+" = field term count for \""+cleanTerm+"\" in "+field+" (delim:"+delim)
       statistics.nodeFrequency
     } else {
       0
     }
   }
+  // LD: this is the old version. instead of dropping terms with weird symbols, we escape everything with a delimiter.
+//  def getFieldTermCount(cleanTerm: String, field: String): Long = {
+//    if (cleanTerm.length > 0 && (cleanTerm.indexOf('@') == 0)) {
+//      val transformedText = "\"" + cleanTerm.replaceAllLiterally("\"","") + "\"" + "." + field
+//      val statistics = getStatistics(transformedText)
+//      statistics.nodeFrequency
+//    } else {
+//      0
+//    }
+//  }
 
 
   def retrieveAnnotatedScoredDocuments(query: String, params: Parameters, resultCount: Int, debugQuery: ((Node, Node) => Unit) = ((x, y) => {})): Seq[(ScoredDocument, AnnotatedNode)] = {
