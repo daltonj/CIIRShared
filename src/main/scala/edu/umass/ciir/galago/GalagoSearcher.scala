@@ -1,6 +1,6 @@
 package edu.umass.ciir.galago
 
-import java.io.{File, IOException}
+import java.io.{StringReader, File, IOException}
 import org.lemurproject.galago.core.index.AggregateReader
 import org.lemurproject.galago.core.retrieval.query.{AnnotatedNode, StructuredQuery, Node}
 import org.lemurproject.galago.tupleflow.Parameters
@@ -8,6 +8,8 @@ import org.lemurproject.galago.core.parse.Document
 
 import scala.collection.JavaConversions._
 import org.lemurproject.galago.core.retrieval.{Retrieval, RetrievalFactory, ScoredPassage, ScoredDocument}
+import collection.mutable
+import java.util
 
 object GalagoSearcher {
   def apply(p: Parameters): GalagoSearcher = {
@@ -42,10 +44,32 @@ class GalagoSearcher(globalParameters: Parameters) {
   val m_searcher = RetrievalFactory.instance(globalParameters)
 
 
+  def myParamCopyFrom(toParams:Parameters,fromParams:Parameters):Parameters = {
+    for(key <- fromParams.getKeys) {
+      if (fromParams.isBoolean(key)) toParams.set(key, fromParams.getBoolean(key))
+      else if (fromParams.isDouble(key)) toParams.set(key, fromParams.getDouble(key))
+      else if (fromParams.isLong(key)) toParams.set(key, fromParams.getLong(key))
+      else if (fromParams.isString(key)) toParams.set(key, fromParams.getString(key))
+      else if (fromParams.isMap(key)) toParams.set(key, fromParams.getMap(key))
+      else if  (fromParams.isList(key)) toParams.set(key, fromParams.getAsList(key))
+      else {
+        throw new RuntimeException("Try to copy params: errornous key "+key+" has unknown type. "+fromParams.toPrettyString)
+    }
+
+    //      else if (fromParams.isMap(key)){
+//        val mparams = new Parameters()
+//        fromParams.getMap(key).copyTo(mparams)
+//        toParams.set(key,mparams)
+//    }
+    }
+    toParams
+  }
+
+
   def getDocuments(documentNames: Seq[String], params: Parameters = new Parameters()): Map[String, Document] = {
     val p = new Parameters()
-    p.copyFrom(globalParameters)
-    p.copyFrom(params)
+    myParamCopyFrom(p,globalParameters)
+    myParamCopyFrom(p,params)
     getDocuments_(documentNames, p)
   }
 
@@ -76,6 +100,9 @@ class GalagoSearcher(globalParameters: Parameters) {
 
   def getStatistics(query: String): AggregateReader.NodeStatistics = {
     try {
+//      println("getStatistics "+query)
+//      print(query+" ")
+
       val root = StructuredQuery.parse(query)
       root.getNodeParameters.set("queryType", "count")
       val transformed = m_searcher.transformQuery(root, queryParams)
@@ -91,8 +118,8 @@ class GalagoSearcher(globalParameters: Parameters) {
 
 
   def getFieldTermCount(cleanTerm: String, field: String): Long = {
-    if (cleanTerm.length > 0) {
-      val transformedText = "\"" + cleanTerm + "\"" + "." + field
+    if (cleanTerm.length > 0 && (cleanTerm.indexOf('@') == 0)) {
+      val transformedText = "\"" + cleanTerm.replaceAllLiterally("\"","") + "\"" + "." + field
       val statistics = getStatistics(transformedText)
       statistics.nodeFrequency
     } else {
@@ -110,9 +137,9 @@ class GalagoSearcher(globalParameters: Parameters) {
 
   def retrieveScoredDocuments(query: String, params: Option[Parameters] = None, resultCount: Int, debugQuery: ((Node, Node) => Unit) = ((x, y) => {})): Seq[ScoredDocument] = {
     val p = new Parameters()
-    p.copyFrom(globalParameters)
+    myParamCopyFrom(p,globalParameters)
     params match {
-      case Some(params) => p.copyFrom(params)
+      case Some(params) => myParamCopyFrom(p,params)
       case None => {}
     }
     p.set("startAt", 0)
