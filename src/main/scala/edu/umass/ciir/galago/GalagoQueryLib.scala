@@ -13,9 +13,23 @@ object GalagoQueryLib {
 
   // ============== build raw query strings =============
 
-  def buildSeqDepForString(string: String): String = {
+  def buildSeqDepForString(string: String, fields:Seq[(String,Double)]=Seq.empty): String = {
     val filteredString = normalize(string).filterNot(StopWordList.isStopWord(_))
-    if (filteredString.size > 0) "#seqdep(" + filteredString.mkString(" ") + ")"
+    if (filteredString.size > 0) {
+      if(fields.isEmpty){
+        "#seqdep(" + filteredString.mkString(" ") + ")"
+      } else if (fields.length == 1){
+        val singleField = fields.head._1
+        "#seqdep(" + filteredString.map(_+"."+singleField).mkString(" ") + ")"
+      } else {
+        val nestedQueries =
+          for((field,weight)<- fields) yield {
+            val query = "#seqdep(" + filteredString.map(_+"."+field).mkString(" ") + ")"
+            query -> weight
+          }
+        buildWeightedCombine(nestedQueries)
+      }
+    }
     else ""
   }
 

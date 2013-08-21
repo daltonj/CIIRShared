@@ -14,11 +14,11 @@ object GalagoQueryBuilder {
 
   import GalagoParamTools.myParamCopyFrom
 
-  def seqdep(query:String, seqdepParams:Option[SeqDep]=None, mu:Option[Double]=None):ParametrizedQuery = {
+  def seqdep(query:String, seqdepParams:Option[SeqDep]=None, mu:Option[Double]=None,fields:Seq[(String,Double)]=Seq.empty):ParametrizedQuery = {
     val param = new Parameters()
     if(seqdepParams.isDefined) GalagoQueryLib.paramSeqDep(param,seqdepParams.get.asTuple)
     if (mu.isDefined) GalagoQueryLib.paramSmoothingMu(param, mu.get)
-    ParametrizedQuery (GalagoQueryLib.buildSeqDepForString(query), param)
+    ParametrizedQuery (GalagoQueryLib.buildSeqDepForString(query, fields), param)
   }
 
   def weightedMultiSeqdep(weightedqueries:Seq[(String,Double)], seqdepParams:Option[SeqDep]=None, mu:Option[Double]=None):ParametrizedQuery = {
