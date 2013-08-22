@@ -86,7 +86,7 @@ object GalagoQueryLib {
 
 
   def paramWorkingSet(p:Parameters, workingSet:List[String]):Parameters = {
-    p.set("working", workingSet)
+    p.set("working", seqAsJavaList(workingSet))
     p
   }
 
