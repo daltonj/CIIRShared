@@ -70,6 +70,13 @@ class GalagoSearcher(globalParameters: Parameters) {
 
 
 
+  def getDocument(documentNames: String, params: Parameters = new Parameters()): Document = {
+    val p = new Parameters()
+    myParamCopyFrom(p,globalParameters)
+    myParamCopyFrom(p,params)
+    getDocument_(documentNames, p)
+  }
+
   def getDocuments(documentNames: Seq[String], params: Parameters = new Parameters()): Map[String, Document] = {
     val p = new Parameters()
     myParamCopyFrom(p,globalParameters)
@@ -94,6 +101,29 @@ class GalagoSearcher(globalParameters: Parameters) {
             case e: InterruptedException => {}
           }
           return getDocuments_(identifier, p, tries - 1)
+        } else {
+          throw ex
+        }
+      }
+    }
+  }
+
+  private def getDocument_(identifier: String, p: Parameters, tries: Int = 5): Document = {
+    try {
+      m_searcher.getDocument(identifier, p)
+    } catch {
+      case ex: NullPointerException => {
+        println("NPE while fetching documents " + identifier)
+        throw ex
+      }
+      case ex: IOException => {
+        if (tries > 0) {
+          try {
+            Thread.sleep(100)
+          } catch {
+            case e: InterruptedException => {}
+          }
+          return getDocument_(identifier, p, tries - 1)
         } else {
           throw ex
         }
