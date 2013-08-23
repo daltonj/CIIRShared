@@ -10,6 +10,9 @@ import scala.collection.JavaConversions._
 import org.lemurproject.galago.core.retrieval.{Retrieval, RetrievalFactory, ScoredPassage, ScoredDocument}
 import collection.mutable
 import java.util
+import com.google.common.cache.{CacheLoader, CacheBuilder, LoadingCache}
+import org.lemurproject.galago.core.index.AggregateReader.NodeStatistics
+import util.concurrent.TimeUnit
 
 object GalagoSearcher {
   def apply(p: Parameters): GalagoSearcher = {
@@ -68,13 +71,26 @@ class GalagoSearcher(globalParameters: Parameters) {
   val m_searcher = RetrievalFactory.instance(globalParameters)
 
 
+  val documentCache: LoadingCache[(String, Parameters), Document] = CacheBuilder.newBuilder()
+                                                                  .maximumSize(100)
+                                                                  .expireAfterWrite(10, TimeUnit.MINUTES)
+                                                                  .build(
+                                                                          new CacheLoader[(String, Parameters), Document]() {
+                                                                            def load(key: (String,Parameters)): Document = {
+                                                                              pullDocument(key._1, key._2)
+                                                                            }
+                                                                          })
+  def resetDocumentCache() { documentCache.cleanUp() }
 
+  def getDocument(documentName: String, params: Parameters = new Parameters()): Document = {
+    documentCache.get(Pair(documentName, params))
+  }
 
-  def getDocument(documentNames: String, params: Parameters = new Parameters()): Document = {
+  def pullDocument(documentName: String, params: Parameters = new Parameters()): Document = {
     val p = new Parameters()
     myParamCopyFrom(p,globalParameters)
     myParamCopyFrom(p,params)
-    getDocument_(documentNames, p)
+    getDocument_(documentName, p)
   }
 
   def getDocuments(documentNames: Seq[String], params: Parameters = new Parameters()): Map[String, Document] = {
