@@ -40,6 +40,36 @@ object GalagoQueryLib {
 
   }
 
+  def buildOrderedWindowQueryForCounting(string:String, windowSize:Int =1, filterStopwords:Boolean = true, replaceStopWithWildcard:Boolean = false):String = {
+    def buildOrdered(filteredString:Seq[String], windowSize:Int):String = {
+        if (filteredString.size > 0) {
+        "#ordered:"+windowSize+"(" + filteredString.mkString(" ") + ")"
+      }
+      else ""
+    }
+
+
+    if (filterStopwords){
+      buildOrdered(normalize(string).filterNot(StopWordList.isStopWord(_)), windowSize)
+    } else if (replaceStopWithWildcard){
+      val (stops,terms) = normalize(string).partition(StopWordList.isStopWord(_))
+      buildOrdered(terms, windowSize+stops.size)
+
+    } else {
+      buildOrdered(normalize(string), windowSize)
+    }
+
+
+  }
+
+  def buildOrderedWindowQuery(string:String, windowSize:Int =1):String = {
+    val filteredString = normalize(string).filterNot(StopWordList.isStopWord(_))
+    if (filteredString.size > 0) {
+      "#combine( #od:"+windowSize+"(" + filteredString.mkString(" ") + ") )"
+    }
+    else ""
+  }
+
 
   def buildMultiPhraseQuery(phrases: Seq[String]): String = {
     "#combine(  " + phrases.map(buildSeqDepForString(_)).mkString(" ") + ")"
