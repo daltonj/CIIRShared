@@ -18,6 +18,10 @@ object GalagoSearcher {
   def apply(p: Parameters): GalagoSearcher = {
     new GalagoSearcher(p)
   }
+  def apply(index:String, p: Parameters): GalagoSearcher = {
+    p.set("index",index)
+    new GalagoSearcher(p)
+  }
 
   def apply(index: String): GalagoSearcher = {
     val p = new Parameters
