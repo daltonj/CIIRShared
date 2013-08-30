@@ -4,6 +4,7 @@ import org.lemurproject.galago.core.parse.Document;
 import org.lemurproject.galago.core.retrieval.Retrieval;
 import org.lemurproject.galago.core.retrieval.ScoredDocument;
 import org.lemurproject.galago.core.retrieval.prf.WeightedTerm;
+import org.lemurproject.galago.core.retrieval.query.Node;
 import org.lemurproject.galago.tupleflow.Parameters;
 
 import java.io.IOException;
@@ -62,13 +63,32 @@ public class RelevanceModel {
     public ArrayList<WeightedTerm> generateGrams(List<ScoredDocument> initialResults) throws IOException {
         HashMap<String, Double> scores = logsToPosteriors2(initialResults);
         HashMap<String, HashMap<String, Integer>> counts = countGrams(initialResults);
+
+        //for(String term : counts.keySet()) {
+        //    HashMap<String,Integer> tfs = counts.get(term);
+        //    for(String docName : tfs.keySet()) {
+        //        long docLen = m_retrieval.getDocumentLength(docName);
+
+        //        long docFreq = 0;
+        //        try {
+        //            docFreq = m_retrieval.getNodeStatistics(new Node("counts", term)).nodeDocumentCount;
+        //        } catch (Exception e) {
+        //            e.printStackTrace();
+        //        }
+
+        //        int tf = tfs.get(docName);
+        //        double score = ((double) tf) / ((double) docLen);
+        //        System.out.println(":LM:\t"+docName+"\t"+docLen+"\t"+term+"\t"+score+"\t"+tf+"\t"+docFreq+"\t"+1.0/((double) docFreq));
+        //    }
+        //}
+
         ArrayList<WeightedTerm> scored = scoreGrams(counts, scores);
         Collections.sort(scored);
         return scored;
    }
     
     
-    // Implementation here is identical to the Relevance Model unigram normaliztion in Indri.
+    // Implementation here is identical to the Relevance Model unigram normalization in Indri.
     // See RelevanceModel.cpp for details
     public static final HashMap<String, Double> logsToPosteriors(List<ScoredDocument> results) {
       HashMap<String, Double> scores = new HashMap<String, Double>();

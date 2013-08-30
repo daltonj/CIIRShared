@@ -3,7 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>edu.umass.ciir</groupId>
   <artifactId>ciirshared</artifactId>
-  <version>1.0.35-SNAPSHOT</version>
+  <version>s2.10.2-g3.5-1.0-SNAPSHOT</version>
   <inceptionYear>2011</inceptionYear>
   <properties>
     <scala.version>2.10.2</scala.version>
