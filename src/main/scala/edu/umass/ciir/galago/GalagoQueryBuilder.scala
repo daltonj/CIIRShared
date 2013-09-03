@@ -14,6 +14,11 @@ object GalagoQueryBuilder {
 
   import GalagoParamTools.myParamCopyFrom
 
+  def rm(origQuery:ParametrizedQuery, fbOrigWt:Double, fbDocs:Int, fbTerms:Int):ParametrizedQuery = {
+    val params: Parameters = GalagoQueryLib.paramRM(origQuery.parameters, fbOrigWt, fbDocs, fbTerms)
+    ParametrizedQuery("#rm ( "+origQuery.queryStr+ ")", params)
+  }
+
   def seqdep(query:String, seqdepParams:Option[SeqDep]=None, mu:Option[Double]=None,fields:Seq[(String,Double)]=Seq.empty):ParametrizedQuery = {
     val param = new Parameters()
     if(seqdepParams.isDefined) GalagoQueryLib.paramSeqDep(param,seqdepParams.get.asTuple)

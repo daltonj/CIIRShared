@@ -133,6 +133,13 @@ object GalagoQueryLib {
     p
   }
 
+  def paramRM(p:Parameters, fbOrigWt:Double, fbDocs:Int, fbTerms:Int):Parameters = {
+    p.set("fbOrigWt", fbOrigWt)
+    p.set("fbDocs", fbDocs)
+    p.set("fbTerms", fbTerms)
+    p
+  }
+
   def paramSmoothingMu(p:Parameters, smoothingMu:Double):Parameters = {
     p.set("mu", smoothingMu)
     p
