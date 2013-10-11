@@ -13,18 +13,18 @@ object GalagoQueryLib {
 
   // ============== build raw query strings =============
 
-  def buildSeqDepForString(string: String, fields:Seq[(String,Double)]=Seq.empty): String = {
+  def buildSeqDepForString(string: String, fields: Seq[(String, Double)] = Seq.empty): String = {
     val filteredString = normalize(string).filterNot(StopWordList.isStopWord(_))
     if (filteredString.size > 0) {
-      if(fields.isEmpty){
-        "#seqdep(" + filteredString.mkString(" ") + ")"
-      } else if (fields.length == 1){
+      if (fields.isEmpty) {
+        "#sdm(" + filteredString.mkString(" ") + ")"
+      } else if (fields.length == 1) {
         val singleField = fields.head._1
-        "#seqdep(" + filteredString.map(_+"."+singleField).mkString(" ") + ")"
+        "#sdm(" + filteredString.map(_ + "." + singleField).mkString(" ") + ")"
       } else {
         val nestedQueries =
-          for((field,weight)<- fields) yield {
-            val query = "#seqdep(" + filteredString.map(_+"."+field).mkString(" ") + ")"
+          for ((field, weight) <- fields) yield {
+            val query = "#sdm(" + filteredString.map(_ + "." + field).mkString(" ") + ")"
             query -> weight
           }
         buildWeightedCombine(nestedQueries)
@@ -33,27 +33,29 @@ object GalagoQueryLib {
     else ""
   }
 
-  def buildTermQueryForString(string:String):String = {
+  def buildTermQueryForString(string: String): String = {
     val filteredString = normalize(string).filterNot(StopWordList.isStopWord(_))
-    if (filteredString.size > 0)  filteredString.mkString(" ")
+    if (filteredString.size > 0) filteredString.mkString(" ")
     else ""
 
   }
 
-  def buildOrderedWindowQueryForCounting(string:String, windowSize:Int =1, filterStopwords:Boolean = true, replaceStopWithWildcard:Boolean = false):String = {
-    def buildOrdered(filteredString:Seq[String], windowSize:Int):String = {
-        if (filteredString.size > 0) {
-        "#ordered:"+windowSize+"(" + filteredString.mkString(" ") + ")"
+  def buildOrderedWindowQueryForCounting(string: String, windowSize: Int = 1, filterStopwords: Boolean = true,
+                                         replaceStopWithWildcard: Boolean = false
+                                        ): String = {
+    def buildOrdered(filteredString: Seq[String], windowSize: Int): String = {
+      if (filteredString.size > 0) {
+        "#ordered:" + windowSize + "(" + filteredString.mkString(" ") + ")"
       }
       else ""
     }
 
 
-    if (filterStopwords){
+    if (filterStopwords) {
       buildOrdered(normalize(string).filterNot(StopWordList.isStopWord(_)), windowSize)
-    } else if (replaceStopWithWildcard){
-      val (stops,terms) = normalize(string).partition(StopWordList.isStopWord(_))
-      buildOrdered(terms, windowSize+stops.size)
+    } else if (replaceStopWithWildcard) {
+      val (stops, terms) = normalize(string).partition(StopWordList.isStopWord(_))
+      buildOrdered(terms, windowSize + stops.size)
 
     } else {
       buildOrdered(normalize(string), windowSize)
@@ -62,10 +64,10 @@ object GalagoQueryLib {
 
   }
 
-  def buildOrderedWindowQuery(string:String, windowSize:Int =1):String = {
+  def buildOrderedWindowQuery(string: String, windowSize: Int = 1): String = {
     val filteredString = normalize(string).filterNot(StopWordList.isStopWord(_))
     if (filteredString.size > 0) {
-      "#combine( #od:"+windowSize+"(" + filteredString.mkString(" ") + ") )"
+      "#combine( #od:" + windowSize + "(" + filteredString.mkString(" ") + ") )"
     }
     else ""
   }
@@ -75,29 +77,31 @@ object GalagoQueryLib {
     "#combine(  " + phrases.map(buildSeqDepForString(_)).mkString(" ") + ")"
   }
 
-  def buildWeightedCombine(weightedQueryStrs:Seq[(String, Double)]):String = {
+  def buildWeightedCombine(weightedQueryStrs: Seq[(String, Double)]): String = {
     val filteredWeightedQueryStrs =
-      renormalize(weightedQueryStrs.filter({case (subquery, weight) => subquery.length > 0 && weight > 0.0}))
+      renormalize(weightedQueryStrs.filter({
+                                             case (subquery, weight) => subquery.length > 0 && weight > 0.0
+                                           }))
 
 
     val weightsStr =
-      for((weight, idx) <- filteredWeightedQueryStrs.map(_._2).zipWithIndex) yield {
-        idx+"="+weight
+      for ((weight, idx) <- filteredWeightedQueryStrs.map(_._2).zipWithIndex) yield {
+        idx + "=" + weight
       }
 
-    if(filteredWeightedQueryStrs.isEmpty) ""
+    if (filteredWeightedQueryStrs.isEmpty) ""
     else {
       val subqueries = filteredWeightedQueryStrs.map(_._1)
-      "#combine"+weightsStr.mkString(":",":","")+"("+subqueries.mkString(" ") + ")"
+      "#combine" + weightsStr.mkString(":", ":", "") + "(" + subqueries.mkString(" ") + ")"
     }
   }
 
 
-  private def renormalize(weightedTerms:Seq[(String, Double)] ):Seq[(String,Double)] = {
-    if(weightedTerms.size == 0) weightedTerms
+  private def renormalize(weightedTerms: Seq[(String, Double)]): Seq[(String, Double)] = {
+    if (weightedTerms.size == 0) weightedTerms
     else {
       val sum = weightedTerms.map(_._2).sum
-      for((term, weight) <- weightedTerms) yield (term -> weight / sum)
+      for ((term, weight) <- weightedTerms) yield (term -> weight / sum)
     }
   }
 
@@ -107,25 +111,25 @@ object GalagoQueryLib {
 
 
   // ======== configure Parameter object ==================
-  def paramStemmedRetrieval(p:Parameters, stemRetrieval:Option[Boolean]=None):Parameters = {
-    if (stemRetrieval.isDefined){
+  def paramStemmedRetrieval(p: Parameters, stemRetrieval: Option[Boolean] = None): Parameters = {
+    if (stemRetrieval.isDefined) {
       p.set("stemming", stemRetrieval.get)
     }
     p
   }
 
 
-  def paramWorkingSet(p:Parameters, workingSet:List[String]):Parameters = {
+  def paramWorkingSet(p: Parameters, workingSet: List[String]): Parameters = {
     p.set("working", seqAsJavaList(workingSet))
     p
   }
 
-  def paramAnnotation(p:Parameters, annotationsOn:Boolean):Parameters = {
+  def paramAnnotation(p: Parameters, annotationsOn: Boolean): Parameters = {
     p.set("annotate", annotationsOn)
     p
   }
 
-  def paramSeqDep(p:Parameters, seqDepParam:(Double, Double, Double)):Parameters = {
+  def paramSeqDep(p: Parameters, seqDepParam: (Double, Double, Double)): Parameters = {
     val (uniw, odw, uww) = seqDepParam
     p.set("uniw", uniw)
     p.set("odw", odw)
@@ -133,19 +137,21 @@ object GalagoQueryLib {
     p
   }
 
-  def paramRM(p:Parameters, fbOrigWt:Double, fbDocs:Int, fbTerms:Int):Parameters = {
+  def paramRM(p: Parameters, fbOrigWt: Double, fbDocs: Int, fbTerms: Int): Parameters = {
     p.set("fbOrigWt", fbOrigWt)
     p.set("fbDocs", fbDocs)
     p.set("fbTerms", fbTerms)
     p
   }
 
-  def paramSmoothingMu(p:Parameters, smoothingMu:Double):Parameters = {
+  def paramSmoothingMu(p: Parameters, smoothingMu: Double): Parameters = {
     p.set("mu", smoothingMu)
     p
   }
 
-  def paramPassageRetrieval(p:Parameters, workingSet:List[String], defaultPassageSize:Int=50, defaultPassageShift:Int = 25):Parameters = {
+  def paramPassageRetrieval(p: Parameters, workingSet: List[String], defaultPassageSize: Int = 50,
+                            defaultPassageShift: Int = 25
+                           ): Parameters = {
     p.set("passageQuery", true)
     p.set("passageSize", defaultPassageSize)
     p.set("passageShift", defaultPassageShift)
@@ -167,9 +173,8 @@ object GalagoQueryLib {
    * @return
    */
   def cleanString(queryTerm: String): String = {
-    queryTerm.replaceAllLiterally("-"," ").replaceAll("[^a-zA-Z0-9]", "")
+    queryTerm.replaceAllLiterally("-", " ").replaceAll("[^a-zA-Z0-9]", "")
   }
-
 
 
 }
