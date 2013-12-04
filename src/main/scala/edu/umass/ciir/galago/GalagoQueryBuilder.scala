@@ -10,6 +10,9 @@ import org.lemurproject.galago.tupleflow.Parameters
 object GalagoQueryBuilder {
   case class SeqDep(term:Double, bigram:Double, windowedBigram:Double){
     def asTuple = (term, bigram, windowedBigram)
+    def _1 = term
+    def _2 = bigram
+    def _3 = windowedBigram
   }
 
   import GalagoParamTools.myParamCopyFrom

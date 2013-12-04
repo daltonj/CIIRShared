@@ -59,13 +59,13 @@ public class GalagoIndexSearcher implements SearcherI {
 			System.err.println("Transformed:" + transformed.toString());
 		}
 
-		ScoredDocument[] galagoResults = m_retrieval.runQuery(transformed, queryParams);
-		int numHits = galagoResults.length;
-		for (int i = 0; i < galagoResults.length; i++) {
-			double score = galagoResults[i].score;
+		List<ScoredDocument> galagoResults = m_retrieval.executeQuery(transformed, queryParams).scoredDocuments;
+		int numHits = galagoResults.size();
+		for (int i = 0; i < galagoResults.size(); i++) {
+			double score = galagoResults.get(i).score;
 			int rank = i + 1;
 
-			String name = galagoResults[i].documentName;
+			String name = galagoResults.get(i).documentName;
 			if (debug) {
                 System.out.format("%s Q0 %s %d %s galago\n", query.getQueryNum(), name, rank,
                         formatScore(score));

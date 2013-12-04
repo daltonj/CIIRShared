@@ -1,18 +1,16 @@
 package edu.umass.ciir.galago
 
 import java.io.{StringReader, File, IOException}
-import org.lemurproject.galago.core.index.AggregateReader
 import org.lemurproject.galago.core.retrieval.query.{AnnotatedNode, StructuredQuery, Node}
 import org.lemurproject.galago.tupleflow.Parameters
 import org.lemurproject.galago.core.parse.Document
 
 import scala.collection.JavaConversions._
 import org.lemurproject.galago.core.retrieval.{Retrieval, RetrievalFactory, ScoredPassage, ScoredDocument}
-import collection.mutable
-import java.util
+import org.lemurproject.galago.core.index.stats.NodeStatistics
+import org.lemurproject.galago.core.parse.Document.DocumentComponents
 import com.google.common.cache.{CacheLoader, CacheBuilder, LoadingCache}
-import org.lemurproject.galago.core.index.AggregateReader.NodeStatistics
-import util.concurrent.TimeUnit
+import java.util.concurrent.TimeUnit
 
 object GalagoSearcher {
   def apply(p: Parameters): GalagoSearcher = {
@@ -30,7 +28,7 @@ object GalagoSearcher {
   }
 
   def apply(jsonConfigFile: File): GalagoSearcher = {
-    val p = Parameters.parse(jsonConfigFile)
+    val p = Parameters.parseFile(jsonConfigFile)
     new GalagoSearcher(p)
   }
 
@@ -94,7 +92,7 @@ class GalagoSearcher(globalParameters: Parameters) {
     val p = new Parameters()
     myParamCopyFrom(p,globalParameters)
     myParamCopyFrom(p,params)
-    getDocument_(documentName, p)
+    getDocuments_(Seq(documentName), p).values.head
   }
 
   def getDocuments(documentNames: Seq[String], params: Parameters = new Parameters()): Map[String, Document] = {
@@ -106,7 +104,7 @@ class GalagoSearcher(globalParameters: Parameters) {
 
   private def getDocuments_(identifier: Seq[String], p: Parameters, tries: Int = 5): Map[String, Document] = {
     try {
-        val docmap = m_searcher.getDocuments(identifier, p)
+        val docmap = m_searcher.getDocuments(seqAsJavaList(identifier), new DocumentComponents(p))
         docmap.toMap
     } catch {
       case ex: NullPointerException => {
@@ -129,7 +127,7 @@ class GalagoSearcher(globalParameters: Parameters) {
   }
 
 
-  def getStatistics(query: String): AggregateReader.NodeStatistics = {
+  def getStatistics(query: String): NodeStatistics = {
     try {
 //      println("getStatistics "+query)
 //      print(query+" ")
@@ -241,7 +239,7 @@ class GalagoSearcher(globalParameters: Parameters) {
     }
   }
 
-  def retrieveScoredPassages(query: String, params: Parameters, resultCount: Int, debugQuery: ((Node, Node) => Unit) = ((x, y) => {})): Seq[ScoredPassage] = {
+  def retrieveScoredPassages(query: String, params: Option[Parameters], resultCount: Int, debugQuery: ((Node, Node) => Unit) = ((x, y) => {})): Seq[ScoredPassage] = {
     retrieveScoredDocuments(query, params, resultCount, debugQuery).map(_.asInstanceOf[ScoredPassage])
   }
 
