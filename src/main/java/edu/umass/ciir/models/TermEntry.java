@@ -1,5 +1,7 @@
 package edu.umass.ciir.models;
 
+import java.util.ArrayList;
+
 public class TermEntry implements Comparable<TermEntry> {
 
 	private String m_term;
@@ -14,6 +16,8 @@ public class TermEntry implements Comparable<TermEntry> {
 
     private double m_weight;
 
+    private ArrayList<Integer> m_positions = new ArrayList<Integer>();
+
 	public TermEntry(String term, long termFrequency, int numTokens) {
 		m_term = term;
 		m_termFrequency = termFrequency;
@@ -22,6 +26,16 @@ public class TermEntry implements Comparable<TermEntry> {
 		m_probability = 0.0;
 		m_weight = 0.0;
 	}
+
+    public TermEntry(String term, long termFrequency, int numTokens, ArrayList<Integer> positions) {
+        m_term = term;
+        m_termFrequency = termFrequency;
+        m_docFrequency = 1;
+        m_numTokens = numTokens;
+        m_probability = 0.0;
+        m_weight = 0.0;
+        m_positions = positions;
+    }
 	
 	public TermEntry(String term, long termFrequency, int numTokens, long documentFrequency) {
 		m_term = term;
@@ -36,7 +50,7 @@ public class TermEntry implements Comparable<TermEntry> {
 	public boolean equals(Object o) {
 		if (o instanceof TermEntry) {
 			TermEntry te = (TermEntry) o;
-			return ((te.getTerm() == m_term) && 
+			return ((te.getTerm().equals(m_term)) &&
 					(te.getFrequency() == m_termFrequency));
 		}
 		return false;
@@ -71,6 +85,10 @@ public class TermEntry implements Comparable<TermEntry> {
 		m_probability=p;
 	}
 
+    public Integer[] getPositions() {
+        return m_positions.toArray(new Integer[0]);
+    }
+
 	@Override
 	public int hashCode() {
 		String hashStr = m_term + m_termFrequency;
@@ -80,6 +98,11 @@ public class TermEntry implements Comparable<TermEntry> {
 	public void incrementTermFrequency() {
 		m_termFrequency++;
 	}
+
+    public void incrementTermFrequency(int position) {
+        m_termFrequency++;
+        m_positions.add(position);
+    }
 	
 	public void addTermFrequency(long frequency) {
 		m_termFrequency += frequency;

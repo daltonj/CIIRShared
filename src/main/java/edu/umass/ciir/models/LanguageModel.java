@@ -61,6 +61,9 @@ public class LanguageModel implements Cloneable {
      * by the language model (such as stop words).
      */
     private long m_collectionFrequency;
+
+
+    private int m_currentDocumentPosition = 0;
     
     /**
      * The minimum length terms to keep.  This is useful for removing
@@ -86,6 +89,7 @@ public class LanguageModel implements Cloneable {
     	m_distinctTermsInLastDoc = new HashSet<String>();
     	m_collectionFrequency = 0;
     	m_phraseWindowSize = windowSize;
+        m_currentDocumentPosition = 0;
     }
 
     public long getCollectionFrequency() {
@@ -106,6 +110,7 @@ public class LanguageModel implements Cloneable {
     throws Exception {
     	m_distinctTermsInLastDoc.clear();
     	m_phraseWindow.clear();
+        m_currentDocumentPosition = 0;
     	Iterator<String> iter = d.terms.iterator();
     	
     	while (iter.hasNext()) {
@@ -122,7 +127,7 @@ public class LanguageModel implements Cloneable {
     			continue;
     		}
     		generateTerms(term);
-    		
+            m_currentDocumentPosition++;
     	}
     	// update document frequencies
 //    	for (String term : m_distinctTermsInLastDoc) {
@@ -160,6 +165,7 @@ public class LanguageModel implements Cloneable {
     throws Exception {
     	m_distinctTermsInLastDoc.clear();
     	m_phraseWindow.clear();
+        m_currentDocumentPosition = 0;
 
     	for (String term : terms) {
     		//System.out.println(term);
@@ -173,7 +179,7 @@ public class LanguageModel implements Cloneable {
     			continue;
     		}
     		generateTerms(term);
-    		
+    		m_currentDocumentPosition++;
     	}
     	// update document frequencies
     	for (String term : m_distinctTermsInLastDoc) {
@@ -192,6 +198,7 @@ public class LanguageModel implements Cloneable {
     throws Exception {
     	m_distinctTermsInLastDoc.clear();
     	m_phraseWindow.clear();
+        m_currentDocumentPosition = 0;
 
     	for (String term : terms) {
     		//System.out.println(term);
@@ -205,7 +212,7 @@ public class LanguageModel implements Cloneable {
     			continue;
     		}
     		generateTerms(term);
-    		
+            m_currentDocumentPosition++;
     	}
     	// update document frequencies
     	for (String term : m_distinctTermsInLastDoc) {
@@ -260,10 +267,10 @@ public class LanguageModel implements Cloneable {
     private void addEntry(String term, int numTokens) {
     	TermEntry entry = m_entries.get(term);
     	if (entry == null) {
-    		entry = new TermEntry(term, 1, numTokens);
+    		entry = new TermEntry(term, 1, numTokens, m_currentDocumentPosition);
     		m_entries.put(term, entry);
     	} else {
-    		entry.incrementTermFrequency();
+    		entry.incrementTermFrequency(m_currentDocumentPosition);
     	}
     	
     	// NOTE: We only care about being able to look up distinct
