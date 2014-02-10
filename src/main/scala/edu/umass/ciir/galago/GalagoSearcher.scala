@@ -82,6 +82,17 @@ class GalagoSearcher(globalParameters: Parameters) {
                                                                               pullDocument(key._1, key._2)
                                                                             }
                                                                           })
+
+  val statsCache: LoadingCache[String, NodeStatistics] = CacheBuilder.newBuilder()
+    .maximumSize(1000)
+    .expireAfterWrite(10, TimeUnit.MINUTES)
+    .build(
+      new CacheLoader[String, NodeStatistics]() {
+        def load(key: String): NodeStatistics = {
+          statsUncached(key)
+        }
+      })
+
   def resetDocumentCache() { documentCache.cleanUp() }
 
   def getDocument(documentName: String, params: Parameters = new Parameters()): Document = {
@@ -129,19 +140,20 @@ class GalagoSearcher(globalParameters: Parameters) {
 
   def getStatistics(query: String): NodeStatistics = {
     try {
-//      println("getStatistics "+query)
-//      print(query+" ")
-
-      val root = StructuredQuery.parse(query)
-      root.getNodeParameters.set("queryType", "count")
-      val transformed = m_searcher.transformQuery(root, queryParams)
-      m_searcher.getNodeStatistics(transformed)
+     statsCache.get(query)
     } catch {
       case e: Exception => {
         println("Error getting statistics for query: " + query)
         throw e
       }
     }
+  }
+
+  private def statsUncached(query:String) : NodeStatistics = {
+    val root = StructuredQuery.parse(query)
+    root.getNodeParameters.set("queryType", "count")
+    val transformed = m_searcher.transformQuery(root, queryParams)
+    m_searcher.getNodeStatistics(transformed)
   }
 
 

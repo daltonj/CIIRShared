@@ -112,6 +112,21 @@ object GalagoQueryLib {
     }
   }
 
+  def buildWSumNoNorm(weightedQueryStrs: Seq[(String, Double)]): String = {
+    val filteredWeightedQueryStrs = weightedQueryStrs
+
+    val weightsStr =
+      for ((weight, idx) <- filteredWeightedQueryStrs.map(_._2).zipWithIndex) yield {
+        idx + "=" + weight
+      }
+
+    if (filteredWeightedQueryStrs.isEmpty) ""
+    else {
+      val subqueries = filteredWeightedQueryStrs.map(_._1)
+      "#wsum" + weightsStr.mkString(":", ":", "") + "(" + subqueries.mkString(" ") + ")"
+    }
+  }
+
 
   private def renormalize(weightedTerms: Seq[(String, Double)]): Seq[(String, Double)] = {
     if (weightedTerms.size == 0) weightedTerms
