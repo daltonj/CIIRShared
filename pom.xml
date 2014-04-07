@@ -31,7 +31,16 @@
     <inceptionYear>2011</inceptionYear>
 
  <repositories>
-        <repository>
+	 <repository>
+	      <id>edu.umass.ciir.releases</id>
+	      <url>http://scm-ciir.cs.umass.edu:8080/nexus/content/repositories/releases</url>
+	    </repository>
+	    <repository>
+	      <id>edu.umass.ciir.snapshots</id>
+	      <url>http://scm-ciir.cs.umass.edu:8080/nexus/content/repositories/snapshots</url>
+	    </repository>
+	  </repositories>
+  	<repository>
             <id>scala-tools.org</id>
             <name>Scala-Tools Maven2 Repository</name>
             <url>http://scala-tools.org/repo-releases</url>
