@@ -39,7 +39,6 @@
 	      <id>edu.umass.ciir.snapshots</id>
 	      <url>http://scm-ciir.cs.umass.edu:8080/nexus/content/repositories/snapshots</url>
 	    </repository>
-	  </repositories>
   	<repository>
             <id>scala-tools.org</id>
             <name>Scala-Tools Maven2 Repository</name>
