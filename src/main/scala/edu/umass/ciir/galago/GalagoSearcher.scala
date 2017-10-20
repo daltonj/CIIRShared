@@ -1,18 +1,16 @@
 package edu.umass.ciir.galago
 
 import java.io.{StringReader, File, IOException}
-import org.lemurproject.galago.core.index.AggregateReader
 import org.lemurproject.galago.core.retrieval.query.{AnnotatedNode, StructuredQuery, Node}
-import org.lemurproject.galago.tupleflow.Parameters
+import org.lemurproject.galago.utility.Parameters
 import org.lemurproject.galago.core.parse.Document
 
 import scala.collection.JavaConversions._
 import org.lemurproject.galago.core.retrieval.{Retrieval, RetrievalFactory, ScoredPassage, ScoredDocument}
-import collection.mutable
-import java.util
+import org.lemurproject.galago.core.index.stats.NodeStatistics
+import org.lemurproject.galago.core.parse.Document.DocumentComponents
 import com.google.common.cache.{CacheLoader, CacheBuilder, LoadingCache}
-import org.lemurproject.galago.core.index.AggregateReader.NodeStatistics
-import util.concurrent.TimeUnit
+import java.util.concurrent.TimeUnit
 
 object GalagoSearcher {
   def apply(p: Parameters): GalagoSearcher = {
@@ -24,18 +22,18 @@ object GalagoSearcher {
   }
 
   def apply(index: String): GalagoSearcher = {
-    val p = new Parameters
+    val p = Parameters.create()
     p.set("index", index)
     new GalagoSearcher(p)
   }
 
   def apply(jsonConfigFile: File): GalagoSearcher = {
-    val p = Parameters.parse(jsonConfigFile)
+    val p = Parameters.parseFile(jsonConfigFile)
     new GalagoSearcher(p)
   }
 
   def apply(server: String, port: Int): GalagoSearcher = {
-    val p = new Parameters
+    val p = Parameters.create()
     val remoteIndex = "http://" + server + ":" + port
     p.set("index", remoteIndex)
     new GalagoSearcher(p)
@@ -57,7 +55,7 @@ object GalagoParamTools{
       }
 
       //      else if (fromParams.isMap(key)){
-      //        val mparams = new Parameters()
+      //        val mparams = Parameters.create()
       //        fromParams.getMap(key).copyTo(mparams)
       //        toParams.set(key,mparams)
       //    }
@@ -71,34 +69,45 @@ class GalagoSearcher(globalParameters: Parameters) {
 
   if (globalParameters.isString("index")) println("** Loading index from: " + globalParameters.getString("index"))
 
-  val queryParams = new Parameters
+  val queryParams = Parameters.create()
   val m_searcher = RetrievalFactory.instance(globalParameters)
 
 
   val documentCache: LoadingCache[(String, Parameters), Document] = CacheBuilder.newBuilder()
-                                                                  .maximumSize(100)
-                                                                  .expireAfterWrite(10, TimeUnit.MINUTES)
-                                                                  .build(
-                                                                          new CacheLoader[(String, Parameters), Document]() {
-                                                                            def load(key: (String,Parameters)): Document = {
-                                                                              pullDocument(key._1, key._2)
-                                                                            }
-                                                                          })
+    .maximumSize(100)
+    .expireAfterWrite(10, TimeUnit.MINUTES)
+    .build(
+      new CacheLoader[(String, Parameters), Document]() {
+        def load(key: (String,Parameters)): Document = {
+          pullDocument(key._1, key._2)
+        }
+      })
+
+  val statsCache: LoadingCache[String, NodeStatistics] = CacheBuilder.newBuilder()
+    .maximumSize(1000)
+    .expireAfterWrite(10, TimeUnit.MINUTES)
+    .build(
+      new CacheLoader[String, NodeStatistics]() {
+        def load(key: String): NodeStatistics = {
+          statsUncached(key)
+        }
+      })
+
   def resetDocumentCache() { documentCache.cleanUp() }
 
-  def getDocument(documentName: String, params: Parameters = new Parameters()): Document = {
+  def getDocument(documentName: String, params: Parameters = Parameters.create()): Document = {
     documentCache.get(Pair(documentName, params))
   }
 
-  def pullDocument(documentName: String, params: Parameters = new Parameters()): Document = {
-    val p = new Parameters()
+  def pullDocument(documentName: String, params: Parameters = Parameters.create()): Document = {
+    val p = Parameters.create()
     myParamCopyFrom(p,globalParameters)
     myParamCopyFrom(p,params)
-    getDocument_(documentName, p)
+    getDocuments_(Seq(documentName), p).values.head
   }
 
-  def getDocuments(documentNames: Seq[String], params: Parameters = new Parameters()): Map[String, Document] = {
-    val p = new Parameters()
+  def getDocuments(documentNames: Seq[String], params: Parameters = Parameters.create()): Map[String, Document] = {
+    val p = Parameters.create()
     myParamCopyFrom(p,globalParameters)
     myParamCopyFrom(p,params)
     getDocuments_(documentNames, p)
@@ -106,7 +115,7 @@ class GalagoSearcher(globalParameters: Parameters) {
 
   private def getDocuments_(identifier: Seq[String], p: Parameters, tries: Int = 5): Map[String, Document] = {
     try {
-      val docmap = m_searcher.getDocuments(identifier, p)
+      val docmap = m_searcher.getDocuments(seqAsJavaList(identifier), new DocumentComponents(p))
       docmap.toMap
     } catch {
       case ex: NullPointerException => {
@@ -128,38 +137,10 @@ class GalagoSearcher(globalParameters: Parameters) {
     }
   }
 
-  private def getDocument_(identifier: String, p: Parameters, tries: Int = 5): Document = {
-    try {
-      m_searcher.getDocument(identifier, p)
-    } catch {
-      case ex: NullPointerException => {
-        println("NPE while fetching documents " + identifier)
-        throw ex
-      }
-      case ex: IOException => {
-        if (tries > 0) {
-          try {
-            Thread.sleep(100)
-          } catch {
-            case e: InterruptedException => {}
-          }
-          return getDocument_(identifier, p, tries - 1)
-        } else {
-          throw ex
-        }
-      }
-    }
-  }
 
-  def getStatistics(query: String): AggregateReader.NodeStatistics = {
+  def getStatistics(query: String): NodeStatistics = {
     try {
-//      println("getStatistics "+query)
-//      print(query+" ")
-
-      val root = StructuredQuery.parse(query)
-      root.getNodeParameters.set("queryType", "count")
-      val transformed = m_searcher.transformQuery(root, queryParams)
-      m_searcher.getNodeStatistics(transformed)
+      statsCache.get(query)
     } catch {
       case e: Exception => {
         println("Error getting statistics for query: " + query)
@@ -168,17 +149,25 @@ class GalagoSearcher(globalParameters: Parameters) {
     }
   }
 
+  private def statsUncached(query:String) : NodeStatistics = {
+    val root = StructuredQuery.parse(query)
+    root.getNodeParameters.set("queryType", "count")
+    val transformed = m_searcher.transformQuery(root, queryParams)
+    m_searcher.getNodeStatistics(transformed)
+  }
+
+
   /**
-   * Select a delimiter character that is not contained in the query, so that we can instruct galago to leave special
-   * characters in our query by wrapping it. Say that delim = '.', we wrap it in
-   *
-   * @.query.
-   *
-   * @param query
-   * @return
-   */
+    * Select a delimiter character that is not contained in the query, so that we can instruct galago to leave special
+    * characters in our query by wrapping it. Say that delim = '.', we wrap it in
+    *
+    * @.query.
+    *
+    * @param query
+    * @return
+    */
   def selectDelim(query:String):Char = {
-//    val delimSymbols = Seq('\"','.','!').iterator
+    //    val delimSymbols = Seq('\"','.','!').iterator
     val delimSymbols = Seq('\"').iterator
     var found:Boolean = false
     var delim:Char= ' '
@@ -209,27 +198,29 @@ class GalagoSearcher(globalParameters: Parameters) {
 
 
 
+
+
   def getFieldTermCount(cleanTerm: String, field: String): Long = {
     if (cleanTerm.length > 0 || cleanTerm.indexOf('#')>=0) {
       val delim = selectDelim(cleanTerm)
       val transformedText = "@"+delim + cleanTerm+delim+"" + "." + field
       val statistics = getStatistics(transformedText)
-//      println(statistics.nodeFrequency.toString+" = field term count for \""+cleanTerm+"\" in "+field+" (delim:"+delim)
+      //      println(statistics.nodeFrequency.toString+" = field term count for \""+cleanTerm+"\" in "+field+" (delim:"+delim)
       statistics.nodeFrequency
     } else {
       0
     }
   }
   // LD: this is the old version. instead of dropping terms with weird symbols, we escape everything with a delimiter.
-//  def getFieldTermCount(cleanTerm: String, field: String): Long = {
-//    if (cleanTerm.length > 0 && (cleanTerm.indexOf('@') == 0)) {
-//      val transformedText = "\"" + cleanTerm.replaceAllLiterally("\"","") + "\"" + "." + field
-//      val statistics = getStatistics(transformedText)
-//      statistics.nodeFrequency
-//    } else {
-//      0
-//    }
-//  }
+  //  def getFieldTermCount(cleanTerm: String, field: String): Long = {
+  //    if (cleanTerm.length > 0 && (cleanTerm.indexOf('@') == 0)) {
+  //      val transformedText = "\"" + cleanTerm.replaceAllLiterally("\"","") + "\"" + "." + field
+  //      val statistics = getStatistics(transformedText)
+  //      statistics.nodeFrequency
+  //    } else {
+  //      0
+  //    }
+  //  }
 
 
   def retrieveAnnotatedScoredDocuments(query: String, params: Parameters, resultCount: Int, debugQuery: ((Node, Node) => Unit) = ((x, y) => {})): Seq[(ScoredDocument, AnnotatedNode)] = {
@@ -240,7 +231,7 @@ class GalagoSearcher(globalParameters: Parameters) {
   }
 
   def retrieveScoredDocuments(query: String, params: Option[Parameters] = None, resultCount: Int, debugQuery: ((Node, Node) => Unit) = ((x, y) => {})): Seq[ScoredDocument] = {
-    val p = new Parameters()
+    val p = Parameters.create()
     myParamCopyFrom(p,globalParameters)
     params match {
       case Some(params) => myParamCopyFrom(p,params)
@@ -252,24 +243,23 @@ class GalagoSearcher(globalParameters: Parameters) {
     val root = StructuredQuery.parse(query)
     val transformed = m_searcher.transformQuery(root, p)
     debugQuery(root, transformed)
-    val results = m_searcher.runQuery(transformed, p)
-    // galago should not be returning null.
-    if (results == null) {
-      Seq()
-    } else {
+    val results = m_searcher.executeQuery(transformed, p).scoredDocuments
+    if (results != null) {
       results
+    } else {
+      Seq()
     }
   }
 
-  def retrieveScoredPassages(query: String, params: Option[Parameters] = None, resultCount: Int, debugQuery: ((Node, Node) => Unit) = ((x, y) => {})): Seq[ScoredPassage] = {
+  def retrieveScoredPassages(query: String, params: Option[Parameters], resultCount: Int, debugQuery: ((Node, Node) => Unit) = ((x, y) => {})): Seq[ScoredPassage] = {
     retrieveScoredDocuments(query, params, resultCount, debugQuery).map(_.asInstanceOf[ScoredPassage])
   }
 
   /**
-   * Maintains the order of the search results but augments them with Document instances
-   * @param resultList
-   * @return
-   */
+    * Maintains the order of the search results but augments them with Document instances
+    * @param resultList
+    * @return
+    */
   def fetchDocuments(resultList: Seq[ScoredDocument]): Seq[FetchedScoredDocument] = {
     val docNames = resultList.map(_.documentName)
     val docs = getDocuments(docNames)
@@ -283,10 +273,10 @@ class GalagoSearcher(globalParameters: Parameters) {
   }
 
   /**
-   * Maintains the order of the search results but augments them with Document instances
-   * @param resultList
-   * @return
-   */
+    * Maintains the order of the search results but augments them with Document instances
+    * @param resultList
+    * @return
+    */
   def fetchPassages(resultList: Seq[ScoredPassage]): Seq[FetchedScoredPassage] = {
     val docNames = resultList.map(_.documentName)
     val docs = getDocuments(docNames)
@@ -299,7 +289,7 @@ class GalagoSearcher(globalParameters: Parameters) {
     }
   }
 
-  def getUnderlyingRetrieval(): Retrieval = {
+  def getUnderlyingRetrieval() : Retrieval = {
     m_searcher
   }
 
@@ -314,4 +304,3 @@ case class FetchedScoredDocument(scored: ScoredDocument, doc: Document)
 case class FetchedScoredPassage(scored: ScoredPassage, doc: Document)
 
 class DocumentNotInIndexException(val docName: String) extends RuntimeException
-

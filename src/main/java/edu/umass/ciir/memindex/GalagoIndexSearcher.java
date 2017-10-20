@@ -6,17 +6,18 @@ import java.util.List;
 import org.lemurproject.galago.core.index.corpus.CorpusReader;
 import org.lemurproject.galago.core.index.mem.MemoryIndex;
 import org.lemurproject.galago.core.retrieval.LocalRetrieval;
+import org.lemurproject.galago.core.retrieval.Results;
 import org.lemurproject.galago.core.retrieval.Retrieval;
 import org.lemurproject.galago.core.retrieval.ScoredDocument;
 import org.lemurproject.galago.core.retrieval.query.Node;
 import org.lemurproject.galago.core.retrieval.query.StructuredQuery;
-import org.lemurproject.galago.tupleflow.Parameters;
+import org.lemurproject.galago.utility.Parameters;
 
 import edu.umass.ciir.CiirProperties;
 
 public class GalagoIndexSearcher implements SearcherI {
 
-	protected Parameters queryParams = new Parameters();
+	protected Parameters queryParams = Parameters.create();
 	
 	Retrieval m_retrieval;
 	private final Corpus m_corpus;
@@ -59,24 +60,23 @@ public class GalagoIndexSearcher implements SearcherI {
 			System.err.println("Transformed:" + transformed.toString());
 		}
 
-		ScoredDocument[] galagoResults = m_retrieval.runQuery(transformed, queryParams);
-		int numHits = galagoResults.length;
-		for (int i = 0; i < galagoResults.length; i++) {
-			double score = galagoResults[i].score;
-			int rank = i + 1;
-
-			String name = galagoResults[i].documentName;
+		final Results galagoResults = m_retrieval.executeQuery(transformed, queryParams);
+		int numResults = galagoResults.scoredDocuments.size();
+		int rank = 1;
+		for (ScoredDocument sdoc : galagoResults.scoredDocuments) {
+			double score = sdoc.score;
+			String name = sdoc.documentName;
 			if (debug) {
                 System.out.format("%s Q0 %s %d %s galago\n", query.getQueryNum(), name, rank,
                         formatScore(score));
             }
 			
 			results.add(new Result(name, score));
-			
+			rank+=1;
 		}
 
 		if (debug) {
-			System.out.println("Running query: " + query.getRawQuery() + " num hits:" + numHits + " num results:" + results.size());
+			System.out.println("Running query: " + query.getRawQuery() + " num hits:" + numResults + " num results:" + results.size());
 		}
 		
 		if (query.fetchDocs()) {

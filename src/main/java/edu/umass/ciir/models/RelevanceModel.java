@@ -10,45 +10,43 @@ import java.util.Map;
 import org.lemurproject.galago.core.parse.Document;
 import org.lemurproject.galago.core.retrieval.Retrieval;
 import org.lemurproject.galago.core.retrieval.ScoredDocument;
-import org.lemurproject.galago.core.scoring.WeightedTerm;
+import org.lemurproject.galago.core.retrieval.prf.WeightedTerm;
 import org.lemurproject.galago.core.tools.Search;
-import org.lemurproject.galago.tupleflow.Parameters;
+import org.lemurproject.galago.utility.Parameters;
+import org.lemurproject.galago.utility.lists.Scored;
 
 public class RelevanceModel {
 
     Retrieval m_retrieval;
-    
-    Parameters parameters;
-    
+
+    Document.DocumentComponents parameters = new Document.DocumentComponents(true, false, true);
+
     private HashMap<String, Integer> lengths;
 
     public RelevanceModel(Retrieval r) {
         m_retrieval = r;
-        Parameters p1 = new Parameters();
-        p1.set("terms", true);
-        p1.set("tags", true);
-        parameters = p1;
     }
-    
-    public static class Gram implements WeightedTerm {
+
+    public class Gram extends WeightedTerm {
 
         public String term;
         public double score;
 
         public Gram(String t) {
-          term = t;
-          score = 0.0;
+            this(t, 0.0);
+        }
+        public Gram(String term, double score) {
+            super(score);
+            this.term = term;
         }
 
+        @Override
         public String getTerm() {
           return term;
         }
 
-        public double getWeight() {
-          return score;
-        }
-
         // The secondary sort is to have defined behavior for statistically tied samples.
+        @Override
         public int compareTo(WeightedTerm other) {
           Gram that = (Gram) other;
           int result = this.score > that.score ? -1 : (this.score < that.score ? 1 : 0);
@@ -59,11 +57,17 @@ public class RelevanceModel {
           return result;
         }
 
+        @Override
         public String toString() {
           return "<" + term + "," + score + ">";
         }
-      }
-        
+
+        @Override
+        public Scored clone(double score) {
+            return new Gram(this.term, score);
+        }
+    }
+
     public ArrayList<WeightedTerm> generateGrams(List<ScoredDocument> initialResults) throws IOException {
         HashMap<String, Double> scores = logsToPosteriors2(initialResults);
         HashMap<String, HashMap<String, Integer>> counts = countGrams(initialResults);
@@ -71,8 +75,8 @@ public class RelevanceModel {
         Collections.sort(scored);
         return scored;
    }
-    
-    
+
+
     // Implementation here is identical to the Relevance Model unigram normaliztion in Indri.
     // See RelevanceModel.cpp for details
     public static final HashMap<String, Double> logsToPosteriors(List<ScoredDocument> results) {
@@ -98,12 +102,12 @@ public class RelevanceModel {
       }
       return scores;
     }
-    
- 
+
+
     /**
      * This is a "fixed" version that computes normalized log posteriors.  It uses the
      * log-sum-exp trick to avoid underflow.
-     * 
+     *
      * @param results
      * @return
      */
@@ -124,7 +128,7 @@ public class RelevanceModel {
         sum += recovered;
       }
       double logNorm = K + Math.log(sum);
-      
+
       // Normalize
       for (Map.Entry<String, Double> entry : scores.entrySet()) {
         entry.setValue(Math.exp(entry.getValue() - logNorm));
@@ -186,5 +190,5 @@ public class RelevanceModel {
       }
 
       return grams;
-    } 
+    }
 }

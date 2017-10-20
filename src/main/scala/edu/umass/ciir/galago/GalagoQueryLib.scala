@@ -1,7 +1,7 @@
 package edu.umass.ciir.galago
 
 import edu.umass.ciir.models.StopWordList
-import org.lemurproject.galago.tupleflow.Parameters
+import org.lemurproject.galago.utility.Parameters
 import scala.collection.JavaConversions._
 
 /**
