@@ -96,6 +96,9 @@ object GalagoQueryLib {
     }
   }
 
+  def buildMultiTermQuery(phrases: Seq[String]): String = {
+    "#combine(  " + phrases.flatMap(normalize(_).filterNot(StopWordList.isStopWord(_))).mkString(" ") + ")"
+  }
 
   private def renormalize(weightedTerms: Seq[(String, Double)]): Seq[(String, Double)] = {
     if (weightedTerms.size == 0) weightedTerms
@@ -105,9 +108,7 @@ object GalagoQueryLib {
     }
   }
 
-  private def buildMultiTermQuery(phrases: Seq[String]): String = {
-    "#combine(  " + phrases.flatMap(normalize(_).filterNot(StopWordList.isStopWord(_))).mkString(" ") + ")"
-  }
+
 
 
   // ======== configure Parameter object ==================
@@ -163,7 +164,11 @@ object GalagoQueryLib {
   // ======== Helpers ===========================
 
   def normalize(query: String): Seq[String] = {
-    query.replace("-", " ").split("\\s+").map(cleanString(_).toLowerCase).filter(_.length() > 1)
+    replacePunctuation(query).split("\\s+").map(cleanString(_).toLowerCase).filter(_.length() > 1)
+  }
+
+  def replacePunctuation(query: String): String = {
+    query.replace("–", " ").replace("-", " ")
   }
 
   /**
