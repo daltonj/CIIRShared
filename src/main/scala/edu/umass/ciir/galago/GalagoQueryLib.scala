@@ -2,13 +2,14 @@ package edu.umass.ciir.galago
 
 import edu.umass.ciir.models.StopWordList
 import org.lemurproject.galago.utility.Parameters
+
 import scala.collection.JavaConversions._
 
 /**
- * User: dietz
- * Date: 3/18/13
- * Time: 10:39 AM
- */
+  * User: dietz
+  * Date: 3/18/13
+  * Time: 10:39 AM
+  */
 object GalagoQueryLib {
 
   // ============== build raw query strings =============
@@ -80,8 +81,8 @@ object GalagoQueryLib {
   def buildWeightedCombine(weightedQueryStrs: Seq[(String, Double)]): String = {
     val filteredWeightedQueryStrs =
       renormalize(weightedQueryStrs.filter({
-                                             case (subquery, weight) => subquery.length > 0 && weight > 0.0
-                                           }))
+        case (subquery, weight) => subquery.length > 0 && weight > 0.0
+      }))
 
 
     val weightsStr =
@@ -96,9 +97,37 @@ object GalagoQueryLib {
     }
   }
 
-  def buildMultiTermQuery(phrases: Seq[String]): String = {
-    "#combine(  " + phrases.flatMap(normalize(_).filterNot(StopWordList.isStopWord(_))).mkString(" ") + ")"
+
+  def buildWeightedCombineNoNorm(weightedQueryStrs: Seq[(String, Double)]): String = {
+    val filteredWeightedQueryStrs = weightedQueryStrs
+
+    val weightsStr =
+      for ((weight, idx) <- filteredWeightedQueryStrs.map(_._2).zipWithIndex) yield {
+        idx + "=" + weight
+      }
+
+    if (filteredWeightedQueryStrs.isEmpty) ""
+    else {
+      val subqueries = filteredWeightedQueryStrs.map(_._1)
+      "#combine" + weightsStr.mkString(":", ":", "") + "(" + subqueries.mkString(" ") + ")"
+    }
   }
+
+  def buildWSumNoNorm(weightedQueryStrs: Seq[(String, Double)]): String = {
+    val filteredWeightedQueryStrs = weightedQueryStrs
+
+    val weightsStr =
+      for ((weight, idx) <- filteredWeightedQueryStrs.map(_._2).zipWithIndex) yield {
+        idx + "=" + weight
+      }
+
+    if (filteredWeightedQueryStrs.isEmpty) ""
+    else {
+      val subqueries = filteredWeightedQueryStrs.map(_._1)
+      "#wsum" + weightsStr.mkString(":", ":", "") + "(" + subqueries.mkString(" ") + ")"
+    }
+  }
+
 
   private def renormalize(weightedTerms: Seq[(String, Double)]): Seq[(String, Double)] = {
     if (weightedTerms.size == 0) weightedTerms
@@ -108,7 +137,9 @@ object GalagoQueryLib {
     }
   }
 
-
+  def buildMultiTermQuery(phrases: Seq[String]): String = {
+    "#combine(  " + phrases.flatMap(normalize(_).filterNot(StopWordList.isStopWord(_))).mkString(" ") + ")"
+  }
 
 
   // ======== configure Parameter object ==================
@@ -160,26 +191,34 @@ object GalagoQueryLib {
     p
   }
 
+  def paramPassageExtentRetrieval(p: Parameters, workingSet: List[String], defaultPassageSize: Int = 50,
+                                  defaultPassageShift: Int = 25, extentName:String
+                                 ): Parameters = {
+    p.set("extentQuery", true)
+    p.set("extent", extentName)
+    p.set("extentCount", defaultPassageSize)
+    p.set("extentShift", defaultPassageShift)
+    paramWorkingSet(p, workingSet)
+    p
+  }
+
 
   // ======== Helpers ===========================
 
   def normalize(query: String): Seq[String] = {
-    replacePunctuation(query).split("\\s+").map(cleanString(_).toLowerCase).filter(_.length() > 1)
-  }
-
-  def replacePunctuation(query: String): String = {
-    query.replace("–", " ").replace("-", " ")
+    query.replace("-", " ").split("\\s+").map(cleanString(_).toLowerCase).filter(_.length() > 1)
   }
 
   /**
-   * Ensure a safe galago query term.
-   *
-   * @param queryTerm
-   * @return
-   */
+    * Ensure a safe galago query term.
+    *
+    * @param queryTerm
+    * @return
+    */
   def cleanString(queryTerm: String): String = {
     queryTerm.replaceAllLiterally("-", " ").replaceAll("[^a-zA-Z0-9]", "")
   }
+
 
 
 }

@@ -6,8 +6,10 @@ import java.util.HashSet;
 public class JaccardSimilarity implements LanguageModelSimilarity {
 
 	public SimilarityMeasure calculateSimilarity(LanguageModel lm1,	LanguageModel lm2, boolean useProbabilities) {
-		
-	    
+
+
+		// TODO:! This is very broken.  The set should contain strings rather than term entries.  The equality was
+		// updated
 		HashSet<TermEntry> union = new HashSet<TermEntry>();
 		union.addAll(lm1.getEntries());
 		union.addAll(lm2.getEntries());

@@ -1,5 +1,7 @@
 package edu.umass.ciir.models;
 
+import java.util.ArrayList;
+
 public class TermEntry implements Comparable<TermEntry> {
 
 	private String m_term;
@@ -12,7 +14,9 @@ public class TermEntry implements Comparable<TermEntry> {
 
 	private double m_probability;
 
-    private double m_weight;
+	private double m_weight;
+
+	private ArrayList<Integer> m_positions = new ArrayList<Integer>();
 
 	public TermEntry(String term, long termFrequency, int numTokens) {
 		m_term = term;
@@ -22,7 +26,17 @@ public class TermEntry implements Comparable<TermEntry> {
 		m_probability = 0.0;
 		m_weight = 0.0;
 	}
-	
+
+	public TermEntry(String term, long termFrequency, int numTokens, ArrayList<Integer> positions) {
+		m_term = term;
+		m_termFrequency = termFrequency;
+		m_docFrequency = 1;
+		m_numTokens = numTokens;
+		m_probability = 0.0;
+		m_weight = 0.0;
+		m_positions = positions;
+	}
+
 	public TermEntry(String term, long termFrequency, int numTokens, long documentFrequency) {
 		m_term = term;
 		m_termFrequency = termFrequency;
@@ -36,31 +50,31 @@ public class TermEntry implements Comparable<TermEntry> {
 	public boolean equals(Object o) {
 		if (o instanceof TermEntry) {
 			TermEntry te = (TermEntry) o;
-			return ((te.getTerm() == m_term) && 
-					(te.getFrequency() == m_termFrequency));
+			return ((te.getTerm().equals(m_term)) &&
+							(te.getFrequency() == m_termFrequency));
 		}
 		return false;
 	}
 
-    public double getWeight() { 
-	return m_weight; 
-    }
-
-    public void setWeight(double weight) {
-	m_weight = weight;
-    }
-    
-
-	public String getTerm() { 
-		return m_term; 
+	public double getWeight() {
+		return m_weight;
 	}
 
-	public long getFrequency() { 
-		return m_termFrequency; 
+	public void setWeight(double weight) {
+		m_weight = weight;
 	}
 
-	public long getDocumentFrequency() { 
-		return m_docFrequency; 
+
+	public String getTerm() {
+		return m_term;
+	}
+
+	public long getFrequency() {
+		return m_termFrequency;
+	}
+
+	public long getDocumentFrequency() {
+		return m_docFrequency;
 	}
 
 	public double getProbability() {
@@ -69,6 +83,10 @@ public class TermEntry implements Comparable<TermEntry> {
 
 	public void setProbability(double p) {
 		m_probability=p;
+	}
+
+	public Integer[] getPositions() {
+		return m_positions.toArray(new Integer[0]);
 	}
 
 	@Override
@@ -80,7 +98,12 @@ public class TermEntry implements Comparable<TermEntry> {
 	public void incrementTermFrequency() {
 		m_termFrequency++;
 	}
-	
+
+	public void incrementTermFrequency(int position) {
+		m_termFrequency++;
+		m_positions.add(position);
+	}
+
 	public void addTermFrequency(long frequency) {
 		m_termFrequency += frequency;
 	}
@@ -88,7 +111,7 @@ public class TermEntry implements Comparable<TermEntry> {
 	public void incrementDocFrequency() {
 		m_docFrequency+= 1;
 	}
-	
+
 	public void addDocFrequency(long docFreq) {
 		m_docFrequency += docFreq;
 	}
@@ -97,7 +120,7 @@ public class TermEntry implements Comparable<TermEntry> {
 	public int getNumTokens() {
 		return m_numTokens;
 	}
-	
+
 	@Override
 	public String toString() {
 		return m_term + ":" + m_termFrequency;
@@ -108,7 +131,7 @@ public class TermEntry implements Comparable<TermEntry> {
 	 * The entry with higher frequency is "first" - so, it's actually "less than"
 	 * in the comparison sense
 	 * If frequencies match, we go by standard lexical order in the comparison sense.
-	 * 
+	 *
 	 * @param termEntry o
 	 */
 	public int compareTo(TermEntry o) {
