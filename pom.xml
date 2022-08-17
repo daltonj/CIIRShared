@@ -91,6 +91,11 @@
             <artifactId>core</artifactId>
             <version>3.13-SNAPSHOT</version>
         </dependency>
+        <dependency>
+            <groupId>org.lemurproject.galago</groupId>
+            <artifactId>utility</artifactId>
+            <version>3.13-SNAPSHOT</version>
+        </dependency>
 
  <dependency>
             <groupId>org.scala-lang</groupId>
