@@ -170,11 +170,6 @@ public class LanguageModel implements Cloneable {
 		for (String term : terms) {
 			//System.out.println(term);
 
-			// skip terms less than three characters long
-			if (term.length() < 2) {
-				continue;
-			}
-
 			if (filterStopWords && StopWordList.isStopWord(term)) {
 				continue;
 			}

@@ -74,7 +74,7 @@ class GalagoSearcher(globalParameters: Parameters) {
 
 
   val documentCache: LoadingCache[(String, Parameters), Document] = CacheBuilder.newBuilder()
-    .maximumSize(100)
+    .maximumSize(10000)
     .expireAfterWrite(10, TimeUnit.MINUTES)
     .build(
       new CacheLoader[(String, Parameters), Document]() {
@@ -84,7 +84,7 @@ class GalagoSearcher(globalParameters: Parameters) {
       })
 
   val statsCache: LoadingCache[String, NodeStatistics] = CacheBuilder.newBuilder()
-    .maximumSize(1000)
+    .maximumSize(10000)
     .expireAfterWrite(10, TimeUnit.MINUTES)
     .build(
       new CacheLoader[String, NodeStatistics]() {

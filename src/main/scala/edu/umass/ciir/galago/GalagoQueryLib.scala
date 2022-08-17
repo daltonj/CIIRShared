@@ -206,7 +206,7 @@ object GalagoQueryLib {
   // ======== Helpers ===========================
 
   def normalize(query: String): Seq[String] = {
-    query.replace("-", " ").split("\\s+").map(cleanString(_).toLowerCase).filter(_.length() > 1)
+    query.replace("-", " ").replace("'", " '").split("\\s+").map(cleanString(_).toLowerCase).filter(_.length() > 1)
   }
 
   /**
