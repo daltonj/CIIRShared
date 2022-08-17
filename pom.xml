@@ -98,6 +98,12 @@
             <version>3.13-SNAPSHOT</version>
         </dependency>
 
+        <dependency>
+            <groupId>org.lemurproject.galago</groupId>
+            <artifactId>eval</artifactId>
+            <version>3.13-SNAPSHOT</version>
+        </dependency>
+        
  <dependency>
             <groupId>org.scala-lang</groupId>
             <artifactId>scala-library</artifactId>
